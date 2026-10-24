@@ -1,0 +1,3084 @@
+<title>Doc Kit</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Martian+Mono:wght@400;600&display=swap">
+<style>
+/* Field Tools v3, No. 08 Doc Kit: the flatbed scanner bed and prepress light table. The document lies on cool grey glass as a white sheet; at night the light table is on in a dark prepress room. */
+:root {
+  --bg: #dfe2e5; --surface: #ffffff; --surface-2: #f2f3f4; --hair: #dadde0; --line: #6d7278;
+  --fg: #141619; --muted: #4c5157; --accent: #a3156b; --accent-ink: #ffffff; --mark: #c4161c;
+  --good: #1c6532; --warn: #7d5000; --bad: #a1141b; --field: #ffffff;
+  --chart-1: #141619; --chart-2: #c4161c; --chart-3: #a3156b; --chart-4: #2f6fa8; --chart-grid: #e3e5e8;
+  --paper: #ffffff; --reg: #d6157f;
+  --sheet: 0 1px 2px rgb(0 0 0 / .12), 0 6px 18px -8px rgb(0 0 0 / .25);
+  --display: "Instrument Sans", "Helvetica Neue", Arial, "Liberation Sans", "DejaVu Sans", sans-serif;
+  --body: "Instrument Sans", "Helvetica Neue", Arial, "Liberation Sans", "DejaVu Sans", sans-serif;
+  --mono: "Martian Mono", ui-monospace, Menlo, Consolas, "DejaVu Sans Mono", monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b0c0e; --surface: #16181b; --surface-2: #1f2226; --hair: #2c3035; --line: #80868e;
+  --fg: #f1f2f4; --muted: #b4b9c0; --accent: #ff7ac0; --accent-ink: #2a0718; --mark: #ff707a;
+  --good: #7fd69b; --warn: #f0bd62; --bad: #ffa088; --field: #121417;
+  --chart-1: #f1f2f4; --chart-2: #ff707a; --chart-3: #ff7ac0; --chart-4: #86b8ff; --chart-grid: #2a2e33;
+  --paper: #ffffff; --reg: #d6157f;
+  --sheet: 0 0 0 1px #3a3f46, 0 0 18px -6px rgb(255 255 255 / .12);
+  --display: "Instrument Sans", "Helvetica Neue", Arial, "Liberation Sans", "DejaVu Sans", sans-serif;
+  --body: "Instrument Sans", "Helvetica Neue", Arial, "Liberation Sans", "DejaVu Sans", sans-serif;
+  --mono: "Martian Mono", ui-monospace, Menlo, Consolas, "DejaVu Sans Mono", monospace;
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0b0c0e; --surface: #16181b; --surface-2: #1f2226; --hair: #2c3035; --line: #80868e;
+  --fg: #f1f2f4; --muted: #b4b9c0; --accent: #ff7ac0; --accent-ink: #2a0718; --mark: #ff707a;
+  --good: #7fd69b; --warn: #f0bd62; --bad: #ffa088; --field: #121417;
+  --chart-1: #f1f2f4; --chart-2: #ff707a; --chart-3: #ff7ac0; --chart-4: #86b8ff; --chart-grid: #2a2e33;
+  --paper: #ffffff; --reg: #d6157f;
+  --sheet: 0 0 0 1px #3a3f46, 0 0 18px -6px rgb(255 255 255 / .12);
+  --display: "Instrument Sans", "Helvetica Neue", Arial, "Liberation Sans", "DejaVu Sans", sans-serif;
+  --body: "Instrument Sans", "Helvetica Neue", Arial, "Liberation Sans", "DejaVu Sans", sans-serif;
+  --mono: "Martian Mono", ui-monospace, Menlo, Consolas, "DejaVu Sans Mono", monospace;
+  color-scheme: dark; }
+/* Local tokens. --paper is the document sheet: white in both themes, because a page is white on the glass and on the light table.
+   --reg is the registration magenta the canvases draw (scan corners, signature placement box); it sits on photos and white pages in
+   both themes, so it is fixed: 4.91:1 on --paper and 3.08:1 on the dimmed photo surround. --sheet is the paper shadow in light and
+   the lit sheet edge in dark. */
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 16px; line-height: 1.5; margin: 0; }
+.wrap {
+  max-width: 1120px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 40px;
+  display: grid; gap: 16px;
+}
+.wrap > * { min-width: 0; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* Header: quiet. A registration target beside the name, the lede, and the privacy line. The header defers to the document. */
+header { display: grid; gap: 6px; }
+.hd { display: flex; align-items: center; gap: 10px; }
+.hd svg { flex: none; display: block; }
+.hd .reg-ring, .hd .reg-cross { fill: none; stroke: var(--accent); stroke-width: 1.2; }
+h1 { font-family: var(--display); font-weight: 700; font-size: 2rem; line-height: 1.1; margin: 0; letter-spacing: -.01em; }
+h2 { font-family: var(--display); font-weight: 600; font-size: 1.25rem; line-height: 1.2; margin: 0; }
+h3 { font-family: var(--display); font-weight: 600; font-size: 15px; line-height: 1.3; margin: 0; color: var(--muted); }
+.lede { margin: 0; color: var(--muted); max-width: 66ch; }
+.privacy { justify-self: start; margin: 4px 0 0; display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 14px 8px 12px;
+  font-weight: 600; font-size: 17px; line-height: 1.3; color: var(--good); background: var(--surface); box-shadow: var(--sheet); border-left: 3px solid var(--good); }
+.privacy::before { content: ""; flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--good); }
+
+/* Panels: sheets lying on the glass. No border, a paper shadow; in dark the edge is lit. */
+.panel { background: var(--surface); box-shadow: var(--sheet); padding: 16px; display: grid; gap: 14px; }
+@media (min-width: 700px) { .panel { padding: 18px 20px 20px; } }
+.panel > * { min-width: 0; }
+.head-row { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid var(--hair); }
+.head-row > * { min-width: 0; }
+.row { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: end; }
+.row > * { min-width: 0; }
+.tag { font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: .04em; }
+.help { margin: 0; font-size: 14px; color: var(--muted); max-width: 72ch; }
+
+/* Fields */
+label { font-size: 15px; font-weight: 600; color: var(--fg); display: grid; gap: 5px; }
+label.inline { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-weight: 500; font-size: 16px; }
+input, select, button, textarea { font: inherit; color: var(--fg); }
+input[type="text"], input[type="number"], select {
+  background: var(--field); border: 1px solid var(--line); border-radius: 4px; padding: 9px 10px; min-height: 44px; font-size: 16px; font-weight: 400; min-width: 0; width: 100%;
+}
+input[type="text"], input[type="number"] { font-family: var(--mono); font-size: 15px; font-variant-numeric: tabular-nums; }
+input[type="range"] { width: 100%; min-height: 44px; margin: 0; accent-color: var(--accent); }
+input[type="checkbox"] { accent-color: var(--accent); width: 20px; height: 20px; margin: 0; }
+::placeholder { color: var(--muted); opacity: 1; }
+
+/* Buttons */
+button { cursor: pointer; border-radius: 4px; padding: 9px 14px; min-height: 44px; border: 1px solid var(--line); background: var(--field); font-size: 15px; font-weight: 600; line-height: 1.2; }
+button:hover { background: var(--surface-2); }
+button:disabled { cursor: not-allowed; opacity: .55; }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button.primary:hover { background: var(--accent); filter: brightness(1.08); }
+button.small { padding: 6px 10px; font-size: 14px; }
+.seg { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; max-width: 100%; }
+.seg button { border: 0; border-radius: 0; background: var(--field); padding: 9px 12px; font-weight: 500; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.seg button:focus-visible { outline-offset: -5px; box-shadow: inset 0 0 0 5px var(--field); }
+
+/* Tabs: plain labels on the glass; the selected one carries a magenta register rule. */
+.tabs { display: flex; flex-wrap: wrap; gap: 0 4px; border-bottom: 1px solid var(--line); }
+.tabs button { border: 0; border-radius: 0; background: transparent; padding: 10px 14px; margin-bottom: -1px; border-bottom: 3px solid transparent;
+  font-family: var(--display); font-weight: 600; font-size: 17px; color: var(--muted); }
+.tabs button:hover { background: transparent; color: var(--fg); }
+.tabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
+.tabpanel { display: grid; gap: 16px; }
+.tabpanel > * { min-width: 0; }
+
+/* Drop zones: bare glass with a dashed bed edge. */
+.drop { border: 1px dashed var(--line); padding: 14px; display: grid; gap: 10px; background: var(--surface-2); }
+.drop.over { border: 2px solid var(--accent); padding: 13px; }
+.file-btn { position: relative; display: inline-grid; font-weight: 600; }
+.file-btn input[type="file"] { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
+.file-btn span { display: inline-flex; align-items: center; min-height: 44px; padding: 9px 14px; border-radius: 4px; background: var(--accent); color: var(--accent-ink); font-weight: 600; font-size: 15px; line-height: 1.2; }
+.file-btn:focus-within span { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* Status */
+.status { font-size: 15px; padding: 8px 12px; border: 1px solid var(--hair); background: var(--surface-2); margin: 0; }
+.status.bad { color: var(--bad); border-color: var(--bad); border-width: 2px; }
+.status.warn { color: var(--warn); border-color: var(--warn); }
+.status.ok { color: var(--muted); }
+.chip { display: inline-block; font-family: var(--mono); font-size: 12px; padding: 2px 8px; border: 1px solid currentColor; border-radius: 3px; white-space: nowrap; }
+.chip.good { color: var(--good); } .chip.warn { color: var(--warn); } .chip.bad { color: var(--bad); } .chip.muted { color: var(--muted); }
+.example-tag { font-family: var(--mono); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: var(--warn); border: 1px solid var(--warn); border-radius: 3px; padding: 1px 6px; margin-left: 4px; white-space: nowrap; }
+
+/* Page strips: each page is a white sheet on the glass. */
+.cards { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.card { border: 1px solid var(--hair); padding: 8px; display: grid; gap: 6px; background: var(--surface-2); min-width: 0; align-content: start; }
+.card[aria-current="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.card.dragging { opacity: .5; }
+.card .thumb { display: grid; place-items: center; height: 140px; background: var(--bg); border-radius: 0; overflow: hidden; cursor: pointer; border: 0; padding: 8px; width: 100%; min-height: 44px; }
+.card .thumb:hover { background: var(--bg); }
+.card .thumb canvas, .card .thumb img { max-width: 100%; max-height: 124px; display: block; background: var(--paper); box-shadow: var(--sheet); }
+.card .meta { font-family: var(--mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.card .tools { display: flex; flex-wrap: wrap; gap: 4px; }
+.card .tools button { padding: 4px 8px; font-size: 14px; min-width: 44px; font-weight: 500; }
+
+/* The working document: the stage is the scanner glass, framed by registration crop marks. */
+.editor { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 860px) { .editor { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); } }
+.stage { position: relative; background: var(--bg); display: grid; place-items: center; min-height: 220px; overflow: hidden; padding: 18px; }
+.stage::before { content: ""; position: absolute; inset: 6px; pointer-events: none; background:
+  linear-gradient(var(--accent), var(--accent)) 0 0 / 12px 1px, linear-gradient(var(--accent), var(--accent)) 0 0 / 1px 12px,
+  linear-gradient(var(--accent), var(--accent)) 100% 0 / 12px 1px, linear-gradient(var(--accent), var(--accent)) 100% 0 / 1px 12px,
+  linear-gradient(var(--accent), var(--accent)) 0 100% / 12px 1px, linear-gradient(var(--accent), var(--accent)) 0 100% / 1px 12px,
+  linear-gradient(var(--accent), var(--accent)) 100% 100% / 12px 1px, linear-gradient(var(--accent), var(--accent)) 100% 100% / 1px 12px;
+  background-repeat: no-repeat; }
+.stage canvas { display: block; max-width: 100%; touch-action: none; }
+#scan-canvas { cursor: crosshair; box-shadow: var(--sheet); }
+#scan-canvas:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+#place-canvas { box-shadow: var(--sheet); }
+#place-canvas:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.result-img { display: block; max-width: 100%; max-height: 520px; margin: 0 auto; background: var(--paper); box-shadow: var(--sheet); }
+.fieldgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px 14px; align-items: end; }
+.fieldgrid > * { min-width: 0; }
+
+/* Outputs. In Scan and PDF tools the output is the key answer (one per view; Image tools marks its total change instead): a proof framed by --mark crop marks at the trim corners. */
+.out { display: grid; gap: 10px; border-top: 1px solid var(--hair); padding-top: 12px; }
+.out > * { min-width: 0; }
+#scan-out, #pdf-out { position: relative; border-top: 0; padding: 14px 16px 16px; margin: 14px 8px 8px; background: var(--surface); box-shadow: var(--sheet); }
+#scan-out::before, #pdf-out::before { content: ""; position: absolute; inset: -8px; pointer-events: none; background:
+  linear-gradient(var(--mark), var(--mark)) 0 0 / 14px 1.5px, linear-gradient(var(--mark), var(--mark)) 0 0 / 1.5px 14px,
+  linear-gradient(var(--mark), var(--mark)) 100% 0 / 14px 1.5px, linear-gradient(var(--mark), var(--mark)) 100% 0 / 1.5px 14px,
+  linear-gradient(var(--mark), var(--mark)) 0 100% / 14px 1.5px, linear-gradient(var(--mark), var(--mark)) 0 100% / 1.5px 14px,
+  linear-gradient(var(--mark), var(--mark)) 100% 100% / 14px 1.5px, linear-gradient(var(--mark), var(--mark)) 100% 100% / 1.5px 14px;
+  background-repeat: no-repeat; }
+#scan-out .out-head .num, #pdf-out .out-head .num { font-family: var(--mono); font-weight: 600; font-size: 18px; color: var(--fg); }
+.out-item { display: grid; gap: 8px; }
+.out-item + .out-item { border-top: 1px solid var(--hair); padding-top: 10px; }
+.out-head { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.out-head strong { font-weight: 600; overflow-wrap: anywhere; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.previews { display: flex; gap: 12px; overflow-x: auto; padding: 10px; background: var(--bg); }
+.previews > * { flex: 0 0 auto; }
+.previews canvas, .previews img { height: 150px; width: auto; display: block; background: var(--paper); box-shadow: var(--sheet); }
+.note { font-size: 14px; color: var(--warn); margin: 0; }
+
+/* Tables */
+.scroll { overflow-x: auto; position: relative; }
+table { border-collapse: collapse; width: 100%; font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; background: var(--surface); }
+th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--hair); vertical-align: middle; }
+th { font-family: var(--body); font-weight: 600; font-size: 13px; color: var(--muted); border-bottom: 1px solid var(--line); }
+td.num, th.num { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.name { font-family: var(--body); font-size: 15px; overflow-wrap: anywhere; min-width: 120px; }
+tfoot td { font-weight: 600; border-top: 1px solid var(--line); border-bottom: 0; }
+td button { font-family: var(--body); }
+/* Image tools key answer: the total size change, inside the trim marks. */
+#img-tot-change:not(:empty) { position: relative; font-weight: 600; font-size: 15px; color: var(--fg); padding: 10px 12px; }
+#img-tot-change:not(:empty)::before { content: ""; position: absolute; inset: 3px; pointer-events: none; background:
+  linear-gradient(var(--mark), var(--mark)) 0 0 / 10px 1.5px, linear-gradient(var(--mark), var(--mark)) 0 0 / 1.5px 10px,
+  linear-gradient(var(--mark), var(--mark)) 100% 0 / 10px 1.5px, linear-gradient(var(--mark), var(--mark)) 100% 0 / 1.5px 10px,
+  linear-gradient(var(--mark), var(--mark)) 0 100% / 10px 1.5px, linear-gradient(var(--mark), var(--mark)) 0 100% / 1.5px 10px,
+  linear-gradient(var(--mark), var(--mark)) 100% 100% / 10px 1.5px, linear-gradient(var(--mark), var(--mark)) 100% 100% / 1.5px 10px;
+  background-repeat: no-repeat; }
+.files-table { min-width: 560px; }
+.img-table { min-width: 680px; }
+
+/* Signature */
+.sig-grid { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 860px) { .sig-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.sig-grid > div { display: grid; gap: 10px; align-content: start; min-width: 0; }
+#sig-pad { width: 100%; height: 150px; background: var(--paper); border: 1px solid var(--line); touch-action: none; cursor: crosshair; display: block; }
+#place-canvas { touch-action: none; cursor: move; max-width: 100%; }
+.stamp-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.stamp-list li { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 15px; }
+.compare { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); padding: 12px; background: var(--bg); }
+.compare figure { margin: 0; display: grid; gap: 6px; min-width: 0; align-content: start; }
+.compare img { max-width: 100%; max-height: 260px; display: block; background: var(--paper); box-shadow: var(--sheet); }
+.compare figcaption { font-size: 12px; color: var(--muted); font-family: var(--mono); }
+
+/* Footer: signature line, maker's mark, method notes. */
+footer { color: var(--muted); font-size: 16px; display: grid; gap: 4px; padding-top: 8px; }
+footer p { margin: 0; }
+.maker { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+details { border-top: 1px solid var(--line); padding-top: 4px; margin-top: 10px; }
+summary { cursor: pointer; font-family: var(--display); font-weight: 600; font-size: 17px; color: var(--fg); min-height: 44px; display: flex; align-items: center; }
+details[open] > summary { margin-bottom: 8px; }
+.method { display: grid; gap: 10px; max-width: 78ch; }
+.method p, .method li { margin: 0; color: var(--fg); font-size: 16px; line-height: 1.55; }
+.method ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.method code { font-family: var(--mono); font-size: 13px; }
+.method h3 { margin-top: 8px; color: var(--fg); }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="hd"><svg viewBox="0 0 28 28" width="28" height="28" aria-hidden="true" focusable="false"><circle class="reg-ring" cx="14" cy="14" r="8"/><path class="reg-cross" d="M14 1v26M1 14h26"/></svg><h1>Doc Kit</h1></div>
+    <p class="lede">Scan paper to PDF with your phone camera, merge, split and sign PDFs, and shrink images. Free and open source.</p>
+    <p class="privacy" id="privacy-line">Your files never leave this device.</p>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Tools">
+    <button type="button" role="tab" id="tab-scan" aria-controls="panel-scan" aria-selected="true">Scan to PDF</button>
+    <button type="button" role="tab" id="tab-pdf" aria-controls="panel-pdf" aria-selected="false" tabindex="-1">PDF tools</button>
+    <button type="button" role="tab" id="tab-img" aria-controls="panel-img" aria-selected="false" tabindex="-1">Image tools</button>
+  </div>
+
+  <!-- ============================== SCAN ============================== -->
+  <section class="tabpanel" id="panel-scan" role="tabpanel" aria-labelledby="tab-scan">
+    <div class="panel">
+      <div class="head-row"><h2>Add pages</h2><span class="tag">Photos of paper</span></div>
+      <div class="drop" id="scan-drop">
+        <div class="row">
+          <label class="file-btn" for="scan-file"><span>Add photos</span>
+            <input type="file" id="scan-file" accept="image/*" capture="environment" multiple>
+          </label>
+          <label class="file-btn" for="scan-file-gallery"><span>Choose from files</span>
+            <input type="file" id="scan-file-gallery" accept="image/*" multiple>
+          </label>
+        </div>
+        <p class="help">On a phone, Add photos opens the camera. You can also drop image files here. Each photo is checked for a page outline and flattened.</p>
+      </div>
+      <p class="status ok" id="scan-status" role="status" aria-live="polite">Loading the example image.</p>
+    </div>
+
+    <div class="panel">
+      <div class="head-row"><h2>Pages</h2><span class="tag num" id="scan-count">0 pages</span></div>
+      <ol class="cards" id="scan-pages" aria-label="Scanned pages"></ol>
+      <p class="help">Select a page to adjust its corners and filter. Drag cards or use the arrow buttons to reorder.</p>
+    </div>
+
+    <div class="panel" id="scan-editor-panel">
+      <div class="head-row"><h2 id="scan-edit-title">Edit page</h2><span id="scan-detect-chip" class="chip muted">No page</span></div>
+      <div class="editor">
+        <div style="display:grid;gap:8px;min-width:0">
+          <h3 id="scan-src-label">Photo and corners</h3>
+          <div class="stage"><canvas id="scan-canvas" width="600" height="400" tabindex="0" role="img" aria-labelledby="scan-src-label" aria-describedby="scan-kbd-help"></canvas></div>
+          <p class="help" id="scan-kbd-help">Drag the four round handles onto the page corners. Keyboard: focus the photo, press 1 to 4 to pick a corner, arrow keys to move it (Shift moves 10 times faster).</p>
+          <div class="row">
+            <button type="button" id="scan-auto">Auto detect</button>
+            <button type="button" id="scan-full">Use full image</button>
+            <button type="button" id="scan-rot-l">Rotate left</button>
+            <button type="button" id="scan-rot-r">Rotate right</button>
+          </div>
+        </div>
+        <div style="display:grid;gap:8px;min-width:0;align-content:start">
+          <h3>Result</h3>
+          <div class="seg" role="group" aria-label="Filter" id="scan-filter">
+            <button type="button" id="flt-original" data-filter="original" aria-pressed="false">Original</button>
+            <button type="button" id="flt-grayscale" data-filter="grayscale" aria-pressed="false">Grayscale</button>
+            <button type="button" id="flt-bw" data-filter="bw" aria-pressed="false">B&amp;W document</button>
+            <button type="button" id="flt-enhance" data-filter="enhance" aria-pressed="true">Enhanced color</button>
+          </div>
+          <div class="stage"><img id="scan-result" class="result-img" alt="Flattened page preview"></div>
+          <p class="help num" id="scan-result-meta"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="head-row"><h2>Make the PDF</h2><span class="tag">Letter, A4 or fit</span></div>
+      <div class="fieldgrid">
+        <label for="scan-size">Page size
+          <select id="scan-size"><option value="letter">Letter (8.5 x 11 in)</option><option value="a4">A4 (210 x 297 mm)</option><option value="fit">Fit to image</option></select>
+        </label>
+        <label for="scan-margin">Margin (mm)
+          <input type="number" id="scan-margin" min="0" max="50" step="1" value="6" inputmode="decimal">
+        </label>
+        <label for="scan-quality">Image quality
+          <select id="scan-quality"><option value="0.92">High</option><option value="0.85" selected>Standard</option><option value="0.72">Smaller file</option></select>
+        </label>
+        <label for="scan-name">File name
+          <input type="text" id="scan-name" value="scan" maxlength="60" autocomplete="off" spellcheck="false">
+        </label>
+      </div>
+      <p class="help" id="scan-size-why"></p>
+      <div class="row"><button type="button" class="primary" id="scan-make">Make PDF</button></div>
+      <div class="out" id="scan-out" hidden></div>
+    </div>
+  </section>
+
+  <!-- ============================== PDF ============================== -->
+  <section class="tabpanel" id="panel-pdf" role="tabpanel" aria-labelledby="tab-pdf" hidden>
+    <div class="panel">
+      <div class="head-row"><h2>PDF files</h2><span class="tag" id="pdf-lib-state">Loading PDF library</span></div>
+      <div class="drop" id="pdf-drop">
+        <div class="row">
+          <label class="file-btn" for="pdf-file"><span>Add PDFs</span>
+            <input type="file" id="pdf-file" accept="application/pdf,.pdf" multiple>
+          </label>
+          <button type="button" id="pdf-clear">Remove all</button>
+        </div>
+        <p class="help">Add one or more PDFs. Their pages join the list below in order, so adding several files merges them.</p>
+      </div>
+      <p class="status ok" id="pdf-status" role="status" aria-live="polite">Loading.</p>
+      <div class="scroll"><table class="files-table" id="pdf-files">
+        <thead><tr><th scope="col">#</th><th scope="col">File</th><th scope="col" class="num">Pages</th><th scope="col" class="num">Size</th><th scope="col">Title in file</th><th scope="col"><span class="sr-only">Remove</span></th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </div>
+
+    <div class="panel">
+      <div class="head-row"><h2>Pages</h2><span class="tag num" id="pdf-count">0 pages</span></div>
+      <div class="row">
+        <button type="button" id="pdf-rot-all">Rotate all right</button>
+        <button type="button" id="pdf-reverse">Reverse order</button>
+        <button type="button" id="pdf-reset">Undo page edits</button>
+      </div>
+      <ol class="cards" id="pdf-pages" aria-label="PDF pages"></ol>
+      <p class="help" id="pdf-thumb-note">Thumbnails are drawn by pdf.js with scripting disabled.</p>
+    </div>
+
+    <div class="panel">
+      <div class="head-row"><h2>Signature or initials</h2><span class="tag">Stamped onto a page</span></div>
+      <div class="sig-grid">
+        <div>
+          <div class="seg" role="group" aria-label="Signature type" id="sig-mode">
+            <button type="button" id="sig-mode-draw" aria-pressed="true">Draw</button>
+            <button type="button" id="sig-mode-type" aria-pressed="false">Type initials</button>
+          </div>
+          <div id="sig-draw-box" style="display:grid;gap:8px">
+            <label for="sig-pad">Draw with a finger, pen or mouse
+              <canvas id="sig-pad" width="600" height="150"></canvas>
+            </label>
+            <div class="row"><button type="button" id="sig-clear">Clear</button></div>
+          </div>
+          <div id="sig-type-box" hidden>
+            <label for="sig-text">Initials or short text
+              <input type="text" id="sig-text" value="W.W." maxlength="40" autocomplete="off" spellcheck="false">
+            </label>
+          </div>
+          <div class="fieldgrid">
+            <label for="sig-page">Page number
+              <input type="number" id="sig-page" min="1" step="1" value="1">
+            </label>
+            <label for="sig-size">Width (% of page)
+              <input type="range" id="sig-size" min="5" max="60" step="1" value="28">
+            </label>
+          </div>
+          <div class="row"><button type="button" class="primary" id="sig-add">Place on page</button></div>
+          <p class="help" id="sig-page-why"></p>
+          <ul class="stamp-list" id="sig-list" aria-label="Placed signatures"></ul>
+        </div>
+        <div>
+          <h3 id="place-label">Position (drag the box)</h3>
+          <div class="stage"><canvas id="place-canvas" width="300" height="388" tabindex="0" role="img" aria-labelledby="place-label"></canvas></div>
+          <p class="help">Drag the dashed box, or focus the preview and use the arrow keys.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="head-row"><h2>Page numbers</h2></div>
+      <div class="fieldgrid">
+        <label class="inline" for="num-on"><input type="checkbox" id="num-on"> Add page numbers</label>
+        <label for="num-format">Format
+          <select id="num-format"><option value="plain">1</option><option value="page-of">Page 1 of N</option><option value="slash">1 / N</option></select>
+        </label>
+        <label for="num-pos">Position
+          <select id="num-pos"><option value="bottom-center">Bottom center</option><option value="bottom-right">Bottom right</option><option value="top-right">Top right</option></select>
+        </label>
+        <label for="num-sizept">Text size (pt)
+          <input type="number" id="num-sizept" min="6" max="24" step="1" value="10">
+        </label>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="head-row"><h2>Save</h2></div>
+      <div class="fieldgrid">
+        <label for="pdf-name">File name
+          <input type="text" id="pdf-name" value="document" maxlength="60" autocomplete="off" spellcheck="false">
+        </label>
+        <label for="pdf-range">Pages to extract
+          <input type="text" id="pdf-range" value="1-2" autocomplete="off" spellcheck="false" placeholder="1-3, 5, 8-">
+        </label>
+        <label for="pdf-every">Split every N pages
+          <input type="number" id="pdf-every" min="1" step="1" value="1">
+        </label>
+      </div>
+      <div class="row">
+        <button type="button" class="primary" id="pdf-build">Build PDF</button>
+        <button type="button" id="pdf-extract">Extract pages</button>
+        <button type="button" id="pdf-split">Split</button>
+      </div>
+      <p class="help" id="pdf-name-why"></p>
+      <p class="help">Every option works on the page list above, so rotations, deletions, signatures and page numbers carry into each output.</p>
+      <div class="out" id="pdf-out" hidden></div>
+    </div>
+  </section>
+
+  <!-- ============================== IMAGES ============================== -->
+  <section class="tabpanel" id="panel-img" role="tabpanel" aria-labelledby="tab-img" hidden>
+    <div class="panel">
+      <div class="head-row"><h2>Images</h2><span class="tag">JPEG, PNG, WebP</span></div>
+      <div class="drop" id="img-drop">
+        <div class="row">
+          <label class="file-btn" for="img-file"><span>Add images</span>
+            <input type="file" id="img-file" accept="image/*" multiple>
+          </label>
+          <button type="button" id="img-clear">Remove all</button>
+        </div>
+        <p class="help">Drop image files here too.</p>
+      </div>
+      <p class="status ok" id="img-status" role="status" aria-live="polite">Loading the example image.</p>
+    </div>
+
+    <div class="panel">
+      <div class="head-row"><h2>Compress</h2><span class="tag">Re-encode as JPEG</span></div>
+      <div class="fieldgrid">
+        <label for="img-quality">JPEG quality <span class="num" id="img-quality-val">0.75</span>
+          <input type="range" id="img-quality" min="0.3" max="0.95" step="0.05" value="0.75">
+        </label>
+        <label for="img-maxedge">Longest side
+          <select id="img-maxedge"><option value="0">Keep size</option><option value="3000">3000 px</option><option value="2000" selected>2000 px</option><option value="1600">1600 px</option><option value="1200">1200 px</option><option value="800">800 px</option></select>
+        </label>
+      </div>
+      <div class="row"><button type="button" class="primary" id="img-compress">Compress</button></div>
+      <div class="scroll"><table class="img-table" id="img-table">
+        <thead><tr><th scope="col">Image</th><th scope="col" class="num">Pixels before</th><th scope="col" class="num">Pixels after</th><th scope="col" class="num">Size before</th><th scope="col" class="num">Size after</th><th scope="col" class="num">Change</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+        <tbody></tbody>
+        <tfoot><tr><td>Total</td><td></td><td></td><td class="num" id="img-tot-before"></td><td class="num" id="img-tot-after"></td><td class="num" id="img-tot-change"></td><td></td></tr></tfoot>
+      </table></div>
+      <div class="compare" id="img-compare" hidden>
+        <figure><img id="img-before" alt="Before compression"><figcaption id="img-before-cap">Before</figcaption></figure>
+        <figure><img id="img-after" alt="After compression"><figcaption id="img-after-cap">After</figcaption></figure>
+      </div>
+      <p class="note" id="img-note" hidden></p>
+    </div>
+
+    <div class="panel">
+      <div class="head-row"><h2>Images to PDF</h2><span class="tag">One image per page</span></div>
+      <div class="fieldgrid">
+        <label for="img-size">Page size
+          <select id="img-size"><option value="letter">Letter (8.5 x 11 in)</option><option value="a4">A4 (210 x 297 mm)</option><option value="fit">Fit to image</option></select>
+        </label>
+        <label for="img-margin">Margin (mm)
+          <input type="number" id="img-margin" min="0" max="50" step="1" value="10">
+        </label>
+        <label for="img-name">File name
+          <input type="text" id="img-name" value="images" maxlength="60" autocomplete="off" spellcheck="false">
+        </label>
+        <label class="inline" for="img-use-comp"><input type="checkbox" id="img-use-comp" checked> Use the compression settings</label>
+      </div>
+      <p class="help" id="img-size-why"></p>
+      <div class="row"><button type="button" class="primary" id="img-make">Make PDF</button></div>
+      <div class="out" id="img-out" hidden></div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Built by Will Whitmire. Runs entirely in your browser; nothing you enter is uploaded.</p>
+    <p class="maker">W. Whitmire / Field Tools / No. 08</p>
+    <details id="method">
+      <summary>Method and limits</summary>
+      <div class="method">
+        <h3>Corner detection</h3>
+        <p>The photo is shrunk to 360 px on its long side, converted to gray (Rec. 601 luma), blurred with a Gaussian (sigma 1.4) and run through a Sobel filter. Edges above an Otsu threshold are dilated, and everything reachable from the image border without crossing an edge is marked as background. The largest remaining region is one candidate; the largest region brighter than an Otsu split of the gray image is the other. For each, the convex hull of its outline is reduced to the largest-area four-corner shape, each side is refit as a least-squares line, and the corners are the line intersections. A candidate is accepted only when it fills most of its outline and the outline sits on strong edges. The corners are then refined at full resolution by searching along each side's normal for the strongest brightness step. When no candidate passes, the full image is used and the page is marked "Detection unsure".</p>
+        <h3>Flattening</h3>
+        <p>The four corners map to a rectangle through a 3 x 3 homography H, solved by the direct linear transform with h33 = 1: for each corner pair (x, y) to (u, v), <code>u = (h11 x + h12 y + h13) / (h31 x + h32 y + 1)</code> and the same for v, giving 8 linear equations in 8 unknowns. Points are normalized (centroid at the origin, mean distance sqrt 2) before solving. Each output pixel center is mapped back into the photo and sampled bilinearly. Output size is the longer of each pair of opposite sides, capped at 2,500 px on the long side.</p>
+        <h3>Filters</h3>
+        <ul>
+          <li>Grayscale: Rec. 601 luma, 0.299 R + 0.587 G + 0.114 B.</li>
+          <li>B&amp;W document: Sauvola threshold <code>T = m (1 + k (s / R - 1))</code>, local mean m and standard deviation s over a square window about 1/16 of the short side, k = 0.2, R = 128, computed with integral images.</li>
+          <li>Enhanced color: the 1st and 99th percentile of luma are stretched to 0 and 255, with the same gain on R, G and B so colors keep their hue.</li>
+        </ul>
+        <h3>Page sizes</h3>
+        <p>Letter is 612 x 792 pt, A4 is 595.28 x 841.89 pt (1 pt = 1/72 in, 1 in = 25.4 mm). The page turns landscape when the image is wider than tall. The image is scaled to fit inside the margins and centered. Fit to image makes the long side 792 pt plus margins.</p>
+        <h3>Limits</h3>
+        <ul>
+          <li>Each file is capped at 50 MB and each output at 300 pages.</li>
+          <li>Photos are processed at up to 2,500 px on the long side, about 210 dpi on a Letter page. Phone photos are larger, so the original resolution is not kept.</li>
+          <li>Detection expects one page that contrasts with what it lies on. Pages on a white desk, pages that run off the photo, curled or folded pages, and busy backgrounds can fail; drag the corners by hand. Page curl is not corrected.</li>
+          <li>There is no text recognition (OCR). Scanned PDFs are images and cannot be searched.</li>
+          <li>Encrypted or password-protected PDFs are refused. Fillable form fields are copied but not flattened. Links, bookmarks, document outlines, form actions and all scripts are dropped from outputs; form fields keep their printed appearance but are no longer fillable.</li>
+          <li>Typed initials use the built-in Helvetica font, which covers Western European characters only.</li>
+          <li>The drawn signature is a picture stamped on the page. It is not a cryptographic digital signature.</li>
+          <li>Compression re-encodes to JPEG. Transparent areas turn white, and photo metadata (including GPS location) is removed. A result larger than the original is flagged.</li>
+          <li>Files stay in this tab's memory and are gone when you close it. Nothing is stored or uploaded.</li>
+          <li>PDF libraries: pdf-lib 1.17.1 and pdf.js 3.11.174, loaded from jsDelivr with integrity hashes. If pdf.js cannot load, PDF tools still work without thumbnails.</li>
+        </ul>
+      </div>
+    </details>
+  </footer>
+</div>
+
+<script id="core">
+var DocCore = (function () {
+  "use strict";
+
+  // ---------------------------------------------------------------- limits
+  var LIMITS = {
+    maxFileBytes: 50 * 1024 * 1024,
+    maxPages: 300,
+    workMaxEdge: 2500,
+    detectMaxEdge: 360
+  };
+
+  function fail(code, message) {
+    var e = new Error(message);
+    e.code = code;
+    return e;
+  }
+
+  // ------------------------------------------------------- linear algebra
+  // Solve A x = b by Gaussian elimination with partial pivoting.
+  function solveLinear(A, b) {
+    var n = b.length, i, j, k;
+    var M = [];
+    for (i = 0; i < n; i++) M.push(A[i].slice(0, n).concat([b[i]]));
+    for (k = 0; k < n; k++) {
+      var p = k, best = Math.abs(M[k][k]);
+      for (i = k + 1; i < n; i++) {
+        var v = Math.abs(M[i][k]);
+        if (v > best) { best = v; p = i; }
+      }
+      if (!(best > 1e-12)) throw fail("degenerate", "The four corners are degenerate (three of them lie on one line).");
+      if (p !== k) { var t = M[p]; M[p] = M[k]; M[k] = t; }
+      for (i = k + 1; i < n; i++) {
+        var f = M[i][k] / M[k][k];
+        if (f === 0) continue;
+        for (j = k; j <= n; j++) M[i][j] -= f * M[k][j];
+      }
+    }
+    var x = new Array(n);
+    for (i = n - 1; i >= 0; i--) {
+      var s = M[i][n];
+      for (j = i + 1; j < n; j++) s -= M[i][j] * x[j];
+      x[i] = s / M[i][i];
+    }
+    return x;
+  }
+
+  function mul3(A, B) {
+    var C = new Array(9);
+    for (var r = 0; r < 3; r++) {
+      for (var c = 0; c < 3; c++) {
+        C[r * 3 + c] = A[r * 3] * B[c] + A[r * 3 + 1] * B[3 + c] + A[r * 3 + 2] * B[6 + c];
+      }
+    }
+    return C;
+  }
+
+  function invert3(m) {
+    var a = m[0], b = m[1], c = m[2], d = m[3], e = m[4], f = m[5], g = m[6], h = m[7], i = m[8];
+    var A = e * i - f * h, B = -(d * i - f * g), C = d * h - e * g;
+    var det = a * A + b * B + c * C;
+    if (!(Math.abs(det) > 1e-15)) throw fail("singular", "The transform is not invertible.");
+    var inv = [
+      A / det, -(b * i - c * h) / det, (b * f - c * e) / det,
+      B / det, (a * i - c * g) / det, -(a * f - c * d) / det,
+      C / det, -(a * h - b * g) / det, (a * e - b * d) / det
+    ];
+    if (Math.abs(inv[8]) > 1e-15) {
+      var s = inv[8];
+      for (var k = 0; k < 9; k++) inv[k] /= s;
+    }
+    return inv;
+  }
+
+  function applyH(H, x, y) {
+    var w = H[6] * x + H[7] * y + H[8];
+    return [(H[0] * x + H[1] * y + H[2]) / w, (H[3] * x + H[4] * y + H[5]) / w];
+  }
+
+  // Hartley normalization: move centroid to origin, mean distance sqrt(2).
+  function normalizer(pts) {
+    var cx = 0, cy = 0, n = pts.length, i;
+    for (i = 0; i < n; i++) { cx += pts[i][0]; cy += pts[i][1]; }
+    cx /= n; cy /= n;
+    var d = 0;
+    for (i = 0; i < n; i++) d += Math.hypot(pts[i][0] - cx, pts[i][1] - cy);
+    d /= n;
+    if (!(d > 0)) throw fail("degenerate", "The four corners coincide.");
+    var s = Math.SQRT2 / d;
+    return [s, 0, -s * cx, 0, s, -s * cy, 0, 0, 1];
+  }
+
+  // Direct linear transform with h33 = 1 (8 unknowns), on normalized points.
+  // Returns row-major 3x3 H with dst ~ H * src.
+  function homographyFromPoints(src, dst) {
+    if (!src || !dst || src.length !== 4 || dst.length !== 4) throw fail("input", "A homography needs exactly four point pairs.");
+    for (var q = 0; q < 4; q++) {
+      if (!isFinite(src[q][0]) || !isFinite(src[q][1]) || !isFinite(dst[q][0]) || !isFinite(dst[q][1])) {
+        throw fail("input", "Corner coordinates must be finite numbers.");
+      }
+    }
+    checkNoThreeCollinear(src);
+    checkNoThreeCollinear(dst);
+    var Ts = normalizer(src), Td = normalizer(dst);
+    var A = [], b = [];
+    for (var k = 0; k < 4; k++) {
+      var p = applyH(Ts, src[k][0], src[k][1]);
+      var r = applyH(Td, dst[k][0], dst[k][1]);
+      var x = p[0], y = p[1], u = r[0], v = r[1];
+      A.push([x, y, 1, 0, 0, 0, -u * x, -u * y]); b.push(u);
+      A.push([0, 0, 0, x, y, 1, -v * x, -v * y]); b.push(v);
+    }
+    var h = solveLinear(A, b);
+    var Hn = [h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7], 1];
+    var H = mul3(invert3(Td), mul3(Hn, Ts));
+    var s = H[8];
+    for (var i = 0; i < 9; i++) H[i] /= s;
+    return H;
+  }
+
+  function cross(o, a, b) {
+    return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  }
+
+  function checkNoThreeCollinear(p) {
+    var scale = 0;
+    for (var i = 0; i < 4; i++) for (var j = i + 1; j < 4; j++) scale = Math.max(scale, Math.hypot(p[i][0] - p[j][0], p[i][1] - p[j][1]));
+    if (!(scale > 0)) throw fail("degenerate", "The four corners coincide.");
+    var tri = [[0, 1, 2], [0, 1, 3], [0, 2, 3], [1, 2, 3]];
+    for (var t = 0; t < 4; t++) {
+      var a = Math.abs(cross(p[tri[t][0]], p[tri[t][1]], p[tri[t][2]]));
+      if (a < 1e-9 * scale * scale) throw fail("degenerate", "The four corners are degenerate (three of them lie on one line).");
+    }
+  }
+
+  function polygonArea(p) {
+    var s = 0;
+    for (var i = 0; i < p.length; i++) {
+      var a = p[i], b = p[(i + 1) % p.length];
+      s += a[0] * b[1] - b[0] * a[1];
+    }
+    return s / 2;
+  }
+
+  function isConvexQuad(p) {
+    if (!p || p.length !== 4) return false;
+    var sign = 0;
+    for (var i = 0; i < 4; i++) {
+      var c = cross(p[i], p[(i + 1) % 4], p[(i + 2) % 4]);
+      if (c === 0 || !isFinite(c)) return false;
+      var s = c > 0 ? 1 : -1;
+      if (sign === 0) sign = s; else if (s !== sign) return false;
+    }
+    return true;
+  }
+
+  // Order four points as top-left, top-right, bottom-right, bottom-left
+  // (clockwise on screen, y pointing down).
+  function orderCorners(pts) {
+    var cx = 0, cy = 0, i;
+    for (i = 0; i < 4; i++) { cx += pts[i][0]; cy += pts[i][1]; }
+    cx /= 4; cy /= 4;
+    var s = pts.map(function (p) { return [p[0], p[1], Math.atan2(p[1] - cy, p[0] - cx)]; });
+    s.sort(function (a, b) { return a[2] - b[2]; });
+    var start = 0, best = Infinity;
+    for (i = 0; i < 4; i++) {
+      var v = s[i][0] + s[i][1];
+      if (v < best) { best = v; start = i; }
+    }
+    var out = [];
+    for (i = 0; i < 4; i++) { var q = s[(start + i) % 4]; out.push([q[0], q[1]]); }
+    return out;
+  }
+
+  function fullImageCorners(w, h) {
+    return [[0, 0], [w, 0], [w, h], [0, h]];
+  }
+
+  // ------------------------------------------------------------- images
+  // An image is { width, height, data: Uint8ClampedArray RGBA }, like ImageData.
+  function createImage(w, h) {
+    w = Math.max(1, Math.round(w)); h = Math.max(1, Math.round(h));
+    return { width: w, height: h, data: new Uint8ClampedArray(w * h * 4) };
+  }
+
+  function checkImage(img) {
+    if (!img || !(img.width > 0) || !(img.height > 0) || !img.data || img.data.length !== img.width * img.height * 4) {
+      throw fail("input", "Expected an RGBA image.");
+    }
+  }
+
+  // Rec. 601 luma.
+  function toGray(img) {
+    var n = img.width * img.height, d = img.data, g = new Float32Array(n);
+    for (var i = 0, j = 0; i < n; i++, j += 4) g[i] = 0.299 * d[j] + 0.587 * d[j + 1] + 0.114 * d[j + 2];
+    return g;
+  }
+
+  // Area-average downscale of a gray plane by an integer-free factor.
+  function downscaleGray(gray, w, h, maxEdge) {
+    var f = Math.max(w, h) / maxEdge;
+    if (f <= 1) return { gray: gray.slice(), w: w, h: h, f: 1 };
+    var nw = Math.max(1, Math.round(w / f)), nh = Math.max(1, Math.round(h / f));
+    var fx = w / nw, fy = h / nh;
+    var out = new Float32Array(nw * nh);
+    for (var y = 0; y < nh; y++) {
+      var y0 = Math.floor(y * fy), y1 = Math.min(h, Math.max(y0 + 1, Math.floor((y + 1) * fy)));
+      for (var x = 0; x < nw; x++) {
+        var x0 = Math.floor(x * fx), x1 = Math.min(w, Math.max(x0 + 1, Math.floor((x + 1) * fx)));
+        var s = 0, c = 0;
+        for (var yy = y0; yy < y1; yy++) {
+          var row = yy * w;
+          for (var xx = x0; xx < x1; xx++) { s += gray[row + xx]; c++; }
+        }
+        out[y * nw + x] = s / c;
+      }
+    }
+    return { gray: out, w: nw, h: nh, fx: fx, fy: fy, f: (fx + fy) / 2 };
+  }
+
+  function gaussianKernel(sigma) {
+    var r = Math.max(1, Math.ceil(sigma * 3)), k = new Float32Array(2 * r + 1), s = 0;
+    for (var i = -r; i <= r; i++) { k[i + r] = Math.exp(-(i * i) / (2 * sigma * sigma)); s += k[i + r]; }
+    for (i = 0; i < k.length; i++) k[i] /= s;
+    return { k: k, r: r };
+  }
+
+  // Separable Gaussian blur with edge clamping.
+  function gaussianBlur(gray, w, h, sigma) {
+    var K = gaussianKernel(sigma), k = K.k, r = K.r;
+    var tmp = new Float32Array(w * h), out = new Float32Array(w * h), x, y, i, s;
+    for (y = 0; y < h; y++) {
+      var row = y * w;
+      for (x = 0; x < w; x++) {
+        s = 0;
+        for (i = -r; i <= r; i++) {
+          var xx = x + i; if (xx < 0) xx = 0; else if (xx >= w) xx = w - 1;
+          s += k[i + r] * gray[row + xx];
+        }
+        tmp[row + x] = s;
+      }
+    }
+    for (y = 0; y < h; y++) {
+      for (x = 0; x < w; x++) {
+        s = 0;
+        for (i = -r; i <= r; i++) {
+          var yy = y + i; if (yy < 0) yy = 0; else if (yy >= h) yy = h - 1;
+          s += k[i + r] * tmp[yy * w + x];
+        }
+        out[y * w + x] = s;
+      }
+    }
+    return out;
+  }
+
+  // Sobel gradient magnitude (edges clamped).
+  function sobel(gray, w, h) {
+    var mag = new Float32Array(w * h);
+    for (var y = 0; y < h; y++) {
+      var ym = y > 0 ? y - 1 : 0, yp = y < h - 1 ? y + 1 : h - 1;
+      for (var x = 0; x < w; x++) {
+        var xm = x > 0 ? x - 1 : 0, xp = x < w - 1 ? x + 1 : w - 1;
+        var a = gray[ym * w + xm], b = gray[ym * w + x], c = gray[ym * w + xp];
+        var d = gray[y * w + xm], f = gray[y * w + xp];
+        var g = gray[yp * w + xm], hh = gray[yp * w + x], i = gray[yp * w + xp];
+        var gx = (c + 2 * f + i) - (a + 2 * d + g);
+        var gy = (g + 2 * hh + i) - (a + 2 * b + c);
+        mag[y * w + x] = Math.sqrt(gx * gx + gy * gy);
+      }
+    }
+    return mag;
+  }
+
+  // Otsu threshold over values scaled into 256 bins between min and max.
+  function otsu(values) {
+    var n = values.length, lo = Infinity, hi = -Infinity, i;
+    for (i = 0; i < n; i++) { var v = values[i]; if (v < lo) lo = v; if (v > hi) hi = v; }
+    if (!(hi > lo)) return lo;
+    var hist = new Float64Array(256), sc = 255 / (hi - lo);
+    for (i = 0; i < n; i++) hist[Math.min(255, Math.floor((values[i] - lo) * sc))]++;
+    var sum = 0;
+    for (i = 0; i < 256; i++) sum += i * hist[i];
+    var wB = 0, sumB = 0, best = -1, t = 0;
+    for (i = 0; i < 256; i++) {
+      wB += hist[i]; if (wB === 0) continue;
+      var wF = n - wB; if (wF === 0) break;
+      sumB += i * hist[i];
+      var mB = sumB / wB, mF = (sum - sumB) / wF;
+      var between = wB * wF * (mB - mF) * (mB - mF);
+      if (between > best) { best = between; t = i; }
+    }
+    return lo + (t + 1) / sc;
+  }
+
+  // Largest 4-connected component of mask==1. Returns { label: Uint8Array, count }.
+  function largestComponent(mask, w, h) {
+    var n = w * h, lab = new Int32Array(n), stack = new Int32Array(n);
+    var bestId = 0, bestCount = 0, id = 0;
+    for (var s = 0; s < n; s++) {
+      if (!mask[s] || lab[s]) continue;
+      id++;
+      var top = 0, count = 0;
+      stack[top++] = s; lab[s] = id;
+      while (top > 0) {
+        var p = stack[--top]; count++;
+        var x = p % w, y = (p - x) / w;
+        if (x > 0 && mask[p - 1] && !lab[p - 1]) { lab[p - 1] = id; stack[top++] = p - 1; }
+        if (x < w - 1 && mask[p + 1] && !lab[p + 1]) { lab[p + 1] = id; stack[top++] = p + 1; }
+        if (y > 0 && mask[p - w] && !lab[p - w]) { lab[p - w] = id; stack[top++] = p - w; }
+        if (y < h - 1 && mask[p + w] && !lab[p + w]) { lab[p + w] = id; stack[top++] = p + w; }
+      }
+      if (count > bestCount) { bestCount = count; bestId = id; }
+    }
+    var out = new Uint8Array(n);
+    if (bestId) for (var i = 0; i < n; i++) out[i] = lab[i] === bestId ? 1 : 0;
+    return { label: out, count: bestCount };
+  }
+
+  // Background = everything 4-connected to the image border through non-edge pixels.
+  function floodFromBorder(edge, w, h) {
+    var n = w * h, bg = new Uint8Array(n), stack = new Int32Array(n), top = 0, x, y;
+    function push(p) { if (!edge[p] && !bg[p]) { bg[p] = 1; stack[top++] = p; } }
+    for (x = 0; x < w; x++) { push(x); push((h - 1) * w + x); }
+    for (y = 0; y < h; y++) { push(y * w); push(y * w + w - 1); }
+    while (top > 0) {
+      var p = stack[--top]; x = p % w; y = (p - x) / w;
+      if (x > 0) push(p - 1);
+      if (x < w - 1) push(p + 1);
+      if (y > 0) push(p - w);
+      if (y < h - 1) push(p + w);
+    }
+    return bg;
+  }
+
+  function dilate(mask, w, h) {
+    var out = new Uint8Array(w * h);
+    for (var y = 0; y < h; y++) {
+      for (var x = 0; x < w; x++) {
+        var v = 0;
+        for (var dy = -1; dy <= 1 && !v; dy++) {
+          var yy = y + dy; if (yy < 0 || yy >= h) continue;
+          for (var dx = -1; dx <= 1; dx++) {
+            var xx = x + dx; if (xx < 0 || xx >= w) continue;
+            if (mask[yy * w + xx]) { v = 1; break; }
+          }
+        }
+        out[y * w + x] = v;
+      }
+    }
+    return out;
+  }
+
+  // Boundary pixel centers of a component (pixel with a 4-neighbor outside it).
+  function boundaryPoints(label, w, h) {
+    var pts = [];
+    for (var y = 0; y < h; y++) {
+      for (var x = 0; x < w; x++) {
+        var p = y * w + x;
+        if (!label[p]) continue;
+        if (x === 0 || y === 0 || x === w - 1 || y === h - 1 || !label[p - 1] || !label[p + 1] || !label[p - w] || !label[p + w]) {
+          pts.push([x + 0.5, y + 0.5]);
+        }
+      }
+    }
+    return pts;
+  }
+
+  // Andrew's monotone chain convex hull.
+  function convexHull(points) {
+    var p = points.slice().sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; });
+    if (p.length < 3) return p;
+    var lower = [], upper = [], i;
+    for (i = 0; i < p.length; i++) {
+      while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p[i]) <= 0) lower.pop();
+      lower.push(p[i]);
+    }
+    for (i = p.length - 1; i >= 0; i--) {
+      while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p[i]) <= 0) upper.pop();
+      upper.push(p[i]);
+    }
+    upper.pop(); lower.pop();
+    return lower.concat(upper);
+  }
+
+  // Largest-area quadrilateral with vertices on the convex hull (O(n^3), n capped).
+  function maxAreaQuad(hull) {
+    var h = hull;
+    if (h.length < 4) return null;
+    var cap = 90;
+    if (h.length > cap) {
+      var step = h.length / cap, sub = [];
+      for (var t = 0; t < cap; t++) sub.push(h[Math.floor(t * step)]);
+      h = sub;
+    }
+    var n = h.length, best = -1, bq = null;
+    function tri(a, b, c) { return Math.abs(cross(h[a], h[b], h[c])) / 2; }
+    for (var i = 0; i < n; i++) {
+      for (var j = i + 2; j < n; j++) {
+        var b1 = -1, k1 = -1, b2 = -1, k2 = -1, k;
+        for (k = i + 1; k < j; k++) { var a1 = tri(i, k, j); if (a1 > b1) { b1 = a1; k1 = k; } }
+        for (k = j + 1; k < n + i; k++) { var kk = k % n; var a2 = tri(j, kk, i); if (a2 > b2) { b2 = a2; k2 = kk; } }
+        if (k1 < 0 || k2 < 0) continue;
+        if (b1 + b2 > best) { best = b1 + b2; bq = [h[i], h[k1], h[j], h[k2]]; }
+      }
+    }
+    return bq ? orderCorners(bq) : null;
+  }
+
+  function distToSegment(p, a, b) {
+    var vx = b[0] - a[0], vy = b[1] - a[1], L = vx * vx + vy * vy;
+    var t = L > 0 ? ((p[0] - a[0]) * vx + (p[1] - a[1]) * vy) / L : 0;
+    t = Math.max(0, Math.min(1, t));
+    return [Math.hypot(p[0] - a[0] - t * vx, p[1] - a[1] - t * vy), t];
+  }
+
+  // Total least squares line through points: returns { c: [x,y], d: [dx,dy] } or null.
+  function fitLine(pts) {
+    if (pts.length < 2) return null;
+    var cx = 0, cy = 0, i;
+    for (i = 0; i < pts.length; i++) { cx += pts[i][0]; cy += pts[i][1]; }
+    cx /= pts.length; cy /= pts.length;
+    var sxx = 0, syy = 0, sxy = 0;
+    for (i = 0; i < pts.length; i++) {
+      var dx = pts[i][0] - cx, dy = pts[i][1] - cy;
+      sxx += dx * dx; syy += dy * dy; sxy += dx * dy;
+    }
+    var theta = 0.5 * Math.atan2(2 * sxy, sxx - syy);
+    return { c: [cx, cy], d: [Math.cos(theta), Math.sin(theta)] };
+  }
+
+  function intersectLines(l1, l2) {
+    var det = l1.d[0] * l2.d[1] - l1.d[1] * l2.d[0];
+    if (Math.abs(det) < 1e-9) return null;
+    var dx = l2.c[0] - l1.c[0], dy = l2.c[1] - l1.c[1];
+    var t = (dx * l2.d[1] - dy * l2.d[0]) / det;
+    return [l1.c[0] + t * l1.d[0], l1.c[1] + t * l1.d[1]];
+  }
+
+  function linesToQuad(lines) {
+    var q = [];
+    for (var i = 0; i < 4; i++) {
+      var p = intersectLines(lines[(i + 3) % 4], lines[i]);
+      if (!p) return null;
+      q.push(p);
+    }
+    return q;
+  }
+
+  // Refine a quad with boundary points: assign each point to its nearest side
+  // (ignoring points near corners), fit a line per side, intersect neighbors.
+  function refineWithPoints(quad, pts) {
+    var buckets = [[], [], [], []], i, s;
+    var lens = [];
+    for (s = 0; s < 4; s++) lens.push(Math.hypot(quad[(s + 1) % 4][0] - quad[s][0], quad[(s + 1) % 4][1] - quad[s][1]));
+    var tol = Math.max(2, 0.04 * Math.min.apply(null, lens));
+    for (i = 0; i < pts.length; i++) {
+      var bestD = Infinity, bestS = -1, bestT = 0;
+      for (s = 0; s < 4; s++) {
+        var r = distToSegment(pts[i], quad[s], quad[(s + 1) % 4]);
+        if (r[0] < bestD) { bestD = r[0]; bestS = s; bestT = r[1]; }
+      }
+      if (bestD <= tol && bestT > 0.1 && bestT < 0.9) buckets[bestS].push(pts[i]);
+    }
+    var lines = [];
+    for (s = 0; s < 4; s++) {
+      if (buckets[s].length < 5) return quad;
+      lines.push(fitLine(buckets[s]));
+    }
+    var q = linesToQuad(lines);
+    return q && isConvexQuad(q) ? q : quad;
+  }
+
+  function sampleGray(gray, w, h, x, y) {
+    var fx = x - 0.5, fy = y - 0.5;
+    if (fx < 0) fx = 0; else if (fx > w - 1) fx = w - 1;
+    if (fy < 0) fy = 0; else if (fy > h - 1) fy = h - 1;
+    var x0 = Math.floor(fx), y0 = Math.floor(fy);
+    var x1 = x0 < w - 1 ? x0 + 1 : x0, y1 = y0 < h - 1 ? y0 + 1 : y0;
+    var ax = fx - x0, ay = fy - y0;
+    var a = gray[y0 * w + x0], b = gray[y0 * w + x1], c = gray[y1 * w + x0], d = gray[y1 * w + x1];
+    return (a * (1 - ax) + b * ax) * (1 - ay) + (c * (1 - ax) + d * ax) * ay;
+  }
+
+  // Sub-pixel refinement on the full-resolution gray image: along each side,
+  // search the normal for the strongest step and fit a line through the hits.
+  function refineOnGray(gray, w, h, quad, radius) {
+    var lines = [];
+    for (var s = 0; s < 4; s++) {
+      var a = quad[s], b = quad[(s + 1) % 4];
+      var len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      if (len < 8) return quad;
+      var tx = (b[0] - a[0]) / len, ty = (b[1] - a[1]) / len, nx = -ty, ny = tx;
+      var hits = [], N = 48;
+      for (var k = 1; k < N; k++) {
+        var t = 0.12 + 0.76 * (k / N);
+        var px = a[0] + (b[0] - a[0]) * t, py = a[1] + (b[1] - a[1]) * t;
+        var R = Math.ceil(radius), prof = [];
+        for (var j = -R - 1; j <= R + 1; j++) prof.push(sampleGray(gray, w, h, px + nx * j, py + ny * j));
+        var bestV = -1, bestJ = 0;
+        for (j = 1; j < prof.length - 1; j++) {
+          var dv = Math.abs(prof[j + 1] - prof[j - 1]);
+          if (dv > bestV) { bestV = dv; bestJ = j; }
+        }
+        if (bestV < 12) continue;
+        var off = 0;
+        if (bestJ > 1 && bestJ < prof.length - 2) {
+          var l = Math.abs(prof[bestJ] - prof[bestJ - 2]), r = Math.abs(prof[bestJ + 2] - prof[bestJ]);
+          var den = l - 2 * bestV + r;
+          if (den < 0) off = 0.5 * (l - r) / den;
+          if (off > 0.5) off = 0.5; else if (off < -0.5) off = -0.5;
+        }
+        var jj = bestJ - R - 1 + off;
+        hits.push([px + nx * jj, py + ny * jj]);
+      }
+      if (hits.length < 8) return quad;
+      var line = fitLine(hits);
+      // one robust pass: drop points farther than 1.5 px, refit
+      var keep = hits.filter(function (p) {
+        return Math.abs((p[0] - line.c[0]) * -line.d[1] + (p[1] - line.c[1]) * line.d[0]) <= 1.5;
+      });
+      if (keep.length >= 6) line = fitLine(keep);
+      lines.push(line);
+    }
+    var q = linesToQuad(lines);
+    if (!q || !isConvexQuad(q)) return quad;
+    for (var i = 0; i < 4; i++) {
+      if (Math.hypot(q[i][0] - quad[i][0], q[i][1] - quad[i][1]) > radius * 2) return quad;
+    }
+    return q;
+  }
+
+  // Fraction of perimeter samples where the gradient is strong.
+  function edgeSupport(mag, w, h, quad, thr) {
+    var hit = 0, tot = 0;
+    for (var s = 0; s < 4; s++) {
+      var a = quad[s], b = quad[(s + 1) % 4];
+      for (var k = 1; k < 40; k++) {
+        var t = k / 40, x = a[0] + (b[0] - a[0]) * t, y = a[1] + (b[1] - a[1]) * t;
+        var best = 0;
+        for (var dy = -1; dy <= 1; dy++) for (var dx = -1; dx <= 1; dx++) {
+          var xi = Math.floor(x) + dx, yi = Math.floor(y) + dy;
+          if (xi >= 0 && yi >= 0 && xi < w && yi < h) best = Math.max(best, mag[yi * w + xi]);
+        }
+        tot++; if (best > thr) hit++;
+      }
+    }
+    return tot ? hit / tot : 0;
+  }
+
+  function candidateFromMask(label, count, w, h, mag, thr) {
+    if (count < 0.05 * w * h) return null;
+    var pts = boundaryPoints(label, w, h);
+    var hull = convexHull(pts);
+    var quad = maxAreaQuad(hull);
+    if (!quad || !isConvexQuad(quad)) return null;
+    quad = refineWithPoints(quad, pts);
+    var area = Math.abs(polygonArea(quad));
+    var fill = Math.min(1, count / Math.max(1, area));
+    var support = edgeSupport(mag, w, h, quad, thr);
+    return { quad: quad, areaFrac: area / (w * h), fill: fill, support: support, score: fill * (0.4 + 0.6 * support) };
+  }
+
+  // Detect a document's four corners. Returns corners in image pixel
+  // coordinates (TL, TR, BR, BL), a confidence flag and diagnostics.
+  function detectDocument(img, opts) {
+    checkImage(img);
+    opts = opts || {};
+    var W = img.width, H = img.height;
+    var full = toGray(img);
+    var ds = downscaleGray(full, W, H, opts.maxEdge || LIMITS.detectMaxEdge);
+    var w = ds.w, h = ds.h;
+    var g = gaussianBlur(ds.gray, w, h, 1.4);
+    var mag = sobel(g, w, h);
+    var thr = otsu(mag);
+    var cands = [];
+    var i;
+
+    // A: closed edges. Non-background region after flooding from the border.
+    var edge = new Uint8Array(w * h);
+    for (i = 0; i < w * h; i++) edge[i] = mag[i] > thr ? 1 : 0;
+    edge = dilate(edge, w, h);
+    var bg = floodFromBorder(edge, w, h);
+    var fg = new Uint8Array(w * h);
+    for (i = 0; i < w * h; i++) fg[i] = bg[i] ? 0 : 1;
+    var cA = largestComponent(fg, w, h);
+    var A = candidateFromMask(cA.label, cA.count, w, h, mag, thr);
+    if (A) { A.method = "edges"; cands.push(A); }
+
+    // B: brightness. Paper is usually lighter than the surface under it.
+    var t = otsu(g), bright = new Uint8Array(w * h);
+    for (i = 0; i < w * h; i++) bright[i] = g[i] > t ? 1 : 0;
+    var cB = largestComponent(bright, w, h);
+    var B = candidateFromMask(cB.label, cB.count, w, h, mag, thr);
+    if (B) { B.method = "brightness"; cands.push(B); }
+
+    var best = null;
+    for (i = 0; i < cands.length; i++) {
+      var c = cands[i];
+      if (c.areaFrac < 0.08 || c.areaFrac > 0.995) continue;
+      if (!best || c.score > best.score) best = c;
+    }
+    // A quad hugging the frame on every side says nothing beyond "use the
+    // full image" (and is what texture or noise produces), so treat it as unsure.
+    var hugs = !!best && best.quad.every(function (p, k) {
+      var c = [[0, 0], [w, 0], [w, h], [0, h]][k];
+      return Math.abs(p[0] - c[0]) < 0.04 * w && Math.abs(p[1] - c[1]) < 0.04 * h;
+    });
+    var confident = !!best && !hugs && best.fill > 0.88 && best.support > 0.55;
+    if (!confident) {
+      return { corners: fullImageCorners(W, H), confident: false, method: "full", score: best ? best.score : 0 };
+    }
+    var fx = ds.fx || 1, fy = ds.fy || 1;
+    var quad = best.quad.map(function (p) { return [p[0] * fx, p[1] * fy]; });
+    if (ds.f > 1 || opts.refine) quad = refineOnGray(full, W, H, quad, Math.max(3, 2.5 * ds.f));
+    quad = quad.map(function (p) { return [Math.max(0, Math.min(W, p[0])), Math.max(0, Math.min(H, p[1]))]; });
+    return { corners: orderCorners(quad), confident: true, method: best.method, score: best.score };
+  }
+
+  // ------------------------------------------------------------- warping
+  // Bilinear sample at continuous coordinates (pixel centers at +0.5),
+  // clamped to the edge. Writes RGBA into out[o..o+3].
+  function sampleBilinear(img, x, y, out, o) {
+    var w = img.width, h = img.height, d = img.data;
+    var fx = x - 0.5, fy = y - 0.5;
+    if (fx < 0) fx = 0; else if (fx > w - 1) fx = w - 1;
+    if (fy < 0) fy = 0; else if (fy > h - 1) fy = h - 1;
+    var x0 = Math.floor(fx), y0 = Math.floor(fy);
+    var x1 = x0 < w - 1 ? x0 + 1 : x0, y1 = y0 < h - 1 ? y0 + 1 : y0;
+    var ax = fx - x0, ay = fy - y0;
+    var i00 = (y0 * w + x0) * 4, i10 = (y0 * w + x1) * 4, i01 = (y1 * w + x0) * 4, i11 = (y1 * w + x1) * 4;
+    var w00 = (1 - ax) * (1 - ay), w10 = ax * (1 - ay), w01 = (1 - ax) * ay, w11 = ax * ay;
+    for (var c = 0; c < 4; c++) out[o + c] = d[i00 + c] * w00 + d[i10 + c] * w10 + d[i01 + c] * w01 + d[i11 + c] * w11;
+  }
+
+  // Output size from the quad's side lengths, capped at maxEdge on the long side.
+  function outputSizeForQuad(q, maxEdge) {
+    function L(a, b) { return Math.hypot(b[0] - a[0], b[1] - a[1]); }
+    var w = Math.max(L(q[0], q[1]), L(q[3], q[2]));
+    var h = Math.max(L(q[0], q[3]), L(q[1], q[2]));
+    var m = maxEdge || LIMITS.workMaxEdge;
+    var s = Math.max(w, h) > m ? m / Math.max(w, h) : 1;
+    return { width: Math.max(1, Math.round(w * s)), height: Math.max(1, Math.round(h * s)) };
+  }
+
+  // Perspective-correct: map the quad (TL, TR, BR, BL) in img onto an
+  // outW x outH rectangle by inverse mapping each output pixel center.
+  function warpPerspective(img, corners, outW, outH) {
+    checkImage(img);
+    if (!isConvexQuad(corners)) throw fail("quad", "The corners must form a convex four-sided shape. Drag them so no sides cross.");
+    if (!outW || !outH) { var sz = outputSizeForQuad(corners); outW = sz.width; outH = sz.height; }
+    var dst = fullImageCorners(outW, outH);
+    var Hm = homographyFromPoints(dst, corners);
+    var out = createImage(outW, outH), od = out.data, px = new Float64Array(4);
+    for (var y = 0; y < outH; y++) {
+      var yc = y + 0.5;
+      for (var x = 0; x < outW; x++) {
+        var xc = x + 0.5;
+        var ww = Hm[6] * xc + Hm[7] * yc + Hm[8];
+        var sx = (Hm[0] * xc + Hm[1] * yc + Hm[2]) / ww;
+        var sy = (Hm[3] * xc + Hm[4] * yc + Hm[5]) / ww;
+        sampleBilinear(img, sx, sy, px, 0);
+        var o = (y * outW + x) * 4;
+        od[o] = px[0]; od[o + 1] = px[1]; od[o + 2] = px[2]; od[o + 3] = 255;
+      }
+    }
+    return out;
+  }
+
+  // ------------------------------------------------------------- filters
+  function filterGrayscale(img) {
+    checkImage(img);
+    var out = createImage(img.width, img.height), s = img.data, d = out.data;
+    for (var i = 0; i < s.length; i += 4) {
+      var y = 0.299 * s[i] + 0.587 * s[i + 1] + 0.114 * s[i + 2];
+      d[i] = d[i + 1] = d[i + 2] = y; d[i + 3] = 255;
+    }
+    return out;
+  }
+
+  // Sauvola adaptive threshold: T = m * (1 + k * (s / R - 1)) over a square
+  // window, using integral images of the sum and the sum of squares.
+  function filterSauvola(img, opts) {
+    checkImage(img);
+    opts = opts || {};
+    var w = img.width, h = img.height, g = toGray(img);
+    var win = opts.window || Math.max(15, Math.round(Math.min(w, h) / 16));
+    if (win % 2 === 0) win++;
+    var k = opts.k != null ? opts.k : 0.2, R = opts.R || 128;
+    var W1 = w + 1, I = new Float64Array(W1 * (h + 1)), I2 = new Float64Array(W1 * (h + 1)), x, y;
+    for (y = 0; y < h; y++) {
+      var rs = 0, rs2 = 0;
+      for (x = 0; x < w; x++) {
+        var v = g[y * w + x]; rs += v; rs2 += v * v;
+        I[(y + 1) * W1 + x + 1] = I[y * W1 + x + 1] + rs;
+        I2[(y + 1) * W1 + x + 1] = I2[y * W1 + x + 1] + rs2;
+      }
+    }
+    var r = (win - 1) / 2, out = createImage(w, h), d = out.data;
+    for (y = 0; y < h; y++) {
+      var y0 = Math.max(0, y - r), y1 = Math.min(h, y + r + 1);
+      for (x = 0; x < w; x++) {
+        var x0 = Math.max(0, x - r), x1 = Math.min(w, x + r + 1);
+        var n = (x1 - x0) * (y1 - y0);
+        var S = I[y1 * W1 + x1] - I[y0 * W1 + x1] - I[y1 * W1 + x0] + I[y0 * W1 + x0];
+        var S2 = I2[y1 * W1 + x1] - I2[y0 * W1 + x1] - I2[y1 * W1 + x0] + I2[y0 * W1 + x0];
+        var m = S / n, varr = Math.max(0, S2 / n - m * m), sd = Math.sqrt(varr);
+        var T = m * (1 + k * (sd / R - 1));
+        var o = (y * w + x) * 4, val = g[y * w + x] > T ? 255 : 0;
+        d[o] = d[o + 1] = d[o + 2] = val; d[o + 3] = 255;
+      }
+    }
+    return out;
+  }
+
+  // Auto contrast: stretch the 1st..99th luma percentile to 0..255,
+  // applied equally to R, G and B so hue is kept.
+  function filterEnhance(img, opts) {
+    checkImage(img);
+    opts = opts || {};
+    var lowP = opts.low != null ? opts.low : 0.01, highP = opts.high != null ? opts.high : 0.99;
+    var s = img.data, n = img.width * img.height, hist = new Float64Array(256), i;
+    for (i = 0; i < s.length; i += 4) hist[Math.round(0.299 * s[i] + 0.587 * s[i + 1] + 0.114 * s[i + 2])]++;
+    var acc = 0, lo = 0, hi = 255;
+    for (i = 0; i < 256; i++) { acc += hist[i]; if (acc >= lowP * n) { lo = i; break; } }
+    acc = 0;
+    for (i = 255; i >= 0; i--) { acc += hist[i]; if (acc >= (1 - highP) * n) { hi = i; break; } }
+    var out = createImage(img.width, img.height), d = out.data;
+    if (hi - lo < 8) { d.set(s); for (i = 3; i < d.length; i += 4) d[i] = 255; return out; }
+    var sc = 255 / (hi - lo);
+    for (i = 0; i < s.length; i += 4) {
+      d[i] = (s[i] - lo) * sc; d[i + 1] = (s[i + 1] - lo) * sc; d[i + 2] = (s[i + 2] - lo) * sc; d[i + 3] = 255;
+    }
+    return out;
+  }
+
+  var FILTERS = ["original", "grayscale", "bw", "enhance"];
+
+  function applyFilter(img, name) {
+    if (name === "grayscale") return filterGrayscale(img);
+    if (name === "bw") return filterSauvola(img);
+    if (name === "enhance") return filterEnhance(img);
+    if (name === "original" || !name) return img;
+    throw fail("input", "Unknown filter: " + String(name).slice(0, 20));
+  }
+
+  // Rotate by quarter turns clockwise.
+  function rotate90(img, turns) {
+    checkImage(img);
+    turns = ((Math.round(turns) % 4) + 4) % 4;
+    if (turns === 0) return img;
+    var w = img.width, h = img.height, nw = turns % 2 ? h : w, nh = turns % 2 ? w : h;
+    var out = createImage(nw, nh), s = img.data, d = out.data;
+    for (var y = 0; y < h; y++) {
+      for (var x = 0; x < w; x++) {
+        var nx, ny;
+        if (turns === 1) { nx = h - 1 - y; ny = x; }
+        else if (turns === 2) { nx = w - 1 - x; ny = h - 1 - y; }
+        else { nx = y; ny = w - 1 - x; }
+        var si = (y * w + x) * 4, di = (ny * nw + nx) * 4;
+        d[di] = s[si]; d[di + 1] = s[si + 1]; d[di + 2] = s[si + 2]; d[di + 3] = s[si + 3];
+      }
+    }
+    return out;
+  }
+
+  // Full scan pipeline for one page.
+  function processScan(img, corners, filter, turns, maxEdge) {
+    var sz = outputSizeForQuad(corners, maxEdge || LIMITS.workMaxEdge);
+    var flat = warpPerspective(img, corners, sz.width, sz.height);
+    return rotate90(applyFilter(flat, filter), turns || 0);
+  }
+
+  // ---------------------------------------------------------- page sizing
+  var PT_PER_IN = 72, MM_PER_IN = 25.4;
+  var PAGE_SIZES = {
+    letter: [8.5 * PT_PER_IN, 11 * PT_PER_IN],
+    a4: [210 / MM_PER_IN * PT_PER_IN, 297 / MM_PER_IN * PT_PER_IN]
+  };
+  var FIT_LONG_EDGE_PT = 11 * PT_PER_IN;
+
+  function mmToPt(mm) { return mm / MM_PER_IN * PT_PER_IN; }
+
+  // Place an image of imgW x imgH pixels on a page. Returns page size and the
+  // image box in PDF points with origin at the bottom-left of the page.
+  function pageLayout(imgW, imgH, opts) {
+    opts = opts || {};
+    if (!(imgW > 0) || !(imgH > 0)) throw fail("input", "Image size must be positive.");
+    var size = opts.size || "letter", m = opts.marginPt == null ? 0 : opts.marginPt, orient = opts.orientation || "auto";
+    if (!(m >= 0) || !isFinite(m)) throw fail("margin", "Margin must be zero or a positive number.");
+    var aspect = imgW / imgH, pw, ph;
+    if (size === "fit") {
+      var iw = aspect >= 1 ? FIT_LONG_EDGE_PT : FIT_LONG_EDGE_PT * aspect;
+      var ih = aspect >= 1 ? FIT_LONG_EDGE_PT / aspect : FIT_LONG_EDGE_PT;
+      return { pageW: iw + 2 * m, pageH: ih + 2 * m, x: m, y: m, w: iw, h: ih };
+    }
+    var base = PAGE_SIZES[size];
+    if (!base) throw fail("input", "Unknown page size: " + String(size).slice(0, 20));
+    pw = base[0]; ph = base[1];
+    var landscape = orient === "landscape" || (orient === "auto" && imgW > imgH);
+    if (landscape) { var t = pw; pw = ph; ph = t; }
+    var cw = pw - 2 * m, ch = ph - 2 * m;
+    if (!(cw > 0) || !(ch > 0)) throw fail("margin", "The margin is larger than the page. Use a smaller margin.");
+    var s = Math.min(cw / imgW, ch / imgH), w = imgW * s, h = imgH * s;
+    return { pageW: pw, pageH: ph, x: (pw - w) / 2, y: (ph - h) / 2, w: w, h: h };
+  }
+
+  // ------------------------------------------------------- page ranges
+  // Parse "1-3, 5, 8-" (1-based, inclusive) into 0-based indices in the
+  // order given, without duplicates. "all" or blank means every page.
+  function parseRange(str, n) {
+    if (!(n > 0)) throw fail("range", "There are no pages.");
+    var s = String(str == null ? "" : str).trim().toLowerCase();
+    if (s === "" || s === "all") { var all = []; for (var a = 0; a < n; a++) all.push(a); return all; }
+    if (s.length > 2000) throw fail("range", "The page range is too long.");
+    var out = [], seen = {}, parts = s.split(/[,;\s]+/).filter(Boolean);
+    for (var i = 0; i < parts.length; i++) {
+      var p = parts[i], m = /^(\d*)\s*-\s*(\d*)$/.exec(p), lo, hi;
+      if (/^\d+$/.test(p)) { lo = hi = parseInt(p, 10); }
+      else if (p === "last") { lo = hi = n; }
+      else if (m && (m[1] || m[2])) {
+        lo = m[1] ? parseInt(m[1], 10) : 1;
+        hi = m[2] ? parseInt(m[2], 10) : n;
+      } else {
+        throw fail("range", "Could not read \"" + p.slice(0, 20) + "\". Use page numbers like 1-3, 5, 8-.");
+      }
+      if (lo < 1 || hi < 1 || lo > n || hi > n) throw fail("range", "Page " + (lo < 1 || lo > n ? lo : hi) + " is out of range. This document has " + n + " pages.");
+      var step = hi >= lo ? 1 : -1;
+      for (var k = lo; ; k += step) {
+        if (!seen[k]) { seen[k] = 1; out.push(k - 1); }
+        if (k === hi) break;
+      }
+    }
+    return out;
+  }
+
+  function chunkIndices(n, size) {
+    size = Math.floor(size);
+    if (!(size >= 1)) throw fail("range", "Pages per file must be at least 1.");
+    var out = [];
+    for (var i = 0; i < n; i += size) {
+      var c = [];
+      for (var j = i; j < Math.min(n, i + size); j++) c.push(j);
+      out.push(c);
+    }
+    return out;
+  }
+
+  // ------------------------------------- rotated-page coordinate mapping
+  function normAngle(a) { a = Math.round(a / 90) * 90; return ((a % 360) + 360) % 360; }
+
+  function displaySize(box, rot) {
+    rot = normAngle(rot);
+    return rot % 180 === 0 ? [box.width, box.height] : [box.height, box.width];
+  }
+
+  // Display coordinates: origin at top-left of the page as shown (after its
+  // /Rotate, which turns the page clockwise), y down, in points. User space:
+  // PDF coordinates of the unrotated page, y up.
+  function displayToUser(dx, dy, box, rot) {
+    rot = normAngle(rot);
+    var W = box.width, H = box.height, ux, uy;
+    if (rot === 0) { ux = dx; uy = H - dy; }
+    else if (rot === 90) { ux = dy; uy = dx; }
+    else if (rot === 180) { ux = W - dx; uy = dy; }
+    else { ux = W - dy; uy = H - dx; }
+    return [box.x + ux, box.y + uy];
+  }
+
+  // Where to draw a stamp so it appears upright at display fractions
+  // (fx, fy) = top-left, width fw of the display width.
+  function stampPlacement(box, rot, fx, fy, fw, aspect) {
+    var ds = displaySize(box, rot);
+    var w = Math.max(1, fw * ds[0]), h = w / aspect;
+    var dx = Math.max(0, Math.min(ds[0] - w, fx * ds[0]));
+    var dy = Math.max(0, Math.min(ds[1] - h, fy * ds[1]));
+    var a = displayToUser(dx, dy + h, box, rot);
+    return { x: a[0], y: a[1], width: w, height: h, rotate: normAngle(rot) };
+  }
+
+  // Text anchor (baseline-left) for a text box at display fractions.
+  function textPlacement(box, rot, fx, fy, size, textWidth) {
+    var ds = displaySize(box, rot), asc = size * 0.72, desc = size * 0.22;
+    var dx = Math.max(0, Math.min(ds[0] - textWidth, fx * ds[0]));
+    var dy = Math.max(0, Math.min(ds[1] - asc - desc, fy * ds[1]));
+    var a = displayToUser(dx, dy + asc, box, rot);
+    return { x: a[0], y: a[1], size: size, rotate: normAngle(rot) };
+  }
+
+  function formatPageNumber(fmt, i, n, start) {
+    var k = i + (start || 1), N = n + (start || 1) - 1;
+    if (fmt === "page-of") return "Page " + k + " of " + N;
+    if (fmt === "slash") return k + " / " + N;
+    return String(k);
+  }
+
+  function pageNumberPlacement(box, rot, position, size, textWidth) {
+    var ds = displaySize(box, rot), margin = Math.max(18, size * 1.6);
+    var dx, dyBase;
+    if (position === "bottom-right") { dx = ds[0] - margin - textWidth; dyBase = ds[1] - margin; }
+    else if (position === "top-right") { dx = ds[0] - margin - textWidth; dyBase = margin + size * 0.72; }
+    else { dx = (ds[0] - textWidth) / 2; dyBase = ds[1] - margin; }
+    var a = displayToUser(dx, dyBase, box, rot);
+    return { x: a[0], y: a[1], size: size, rotate: normAngle(rot) };
+  }
+
+  // ---------------------------------------------------- PDF operations
+  // `lib` is the pdf-lib namespace (the PDFLib global in the page, require("pdf-lib") in tests).
+  function loadPdf(lib, bytes) {
+    return lib.PDFDocument.load(bytes, { updateMetadata: false }).catch(function (e) {
+      var msg = String(e && e.message || e);
+      if (/encrypt/i.test(msg)) throw fail("encrypted", "This PDF is encrypted or password protected. Remove the protection in the app that made it, then add it again.");
+      throw fail("pdf", "This file could not be read as a PDF.");
+    });
+  }
+
+  // Remove every action and cross-page reference from a copied page: /AA and
+  // article beads on the page; link, media and file-attachment annotations;
+  // and /A, /AA, /Dest, /Parent, /P, /IRT on the annotations that remain
+  // (so no JavaScript, Launch, SubmitForm, ImportData, /Next chains or form
+  // field actions survive, and nothing points at pages that were left out).
+  var DROP_ANNOTS = { "/Link": 1, "/Screen": 1, "/Movie": 1, "/Sound": 1, "/RichMedia": 1, "/FileAttachment": 1, "/3D": 1 };
+  var ANNOT_REF_KEYS = ["A", "AA", "Dest", "Parent", "P", "PA", "IRT"];
+  function stripPageScripts(lib, page) {
+    var N = lib.PDFName, node = page.node;
+    ["AA", "B", "PresSteps"].forEach(function (k) { node.delete(N.of(k)); });
+    var annots = node.lookup(N.of("Annots"));
+    if (!annots) return 0;
+    if (!(annots instanceof lib.PDFArray)) { node.delete(N.of("Annots")); return 0; }
+    var removed = 0;
+    for (var i = annots.size() - 1; i >= 0; i--) {
+      var a = annots.lookup(i);
+      if (!(a instanceof lib.PDFDict) || DROP_ANNOTS[String(a.lookup(N.of("Subtype")))]) { annots.remove(i); removed++; continue; }
+      ANNOT_REF_KEYS.forEach(function (k) { a.delete(N.of(k)); });
+    }
+    return removed;
+  }
+
+  // Delete indirect objects not reachable from the trailer. copyPages pulls in
+  // everything a page references (including other pages through link
+  // destinations), and pdf-lib writes every object it holds, so without this
+  // an "extract pages 1-2" output could still carry page 3's content or an
+  // orphaned script.
+  function pruneUnreachable(lib, doc) {
+    var ctx = doc.context, t = ctx.trailerInfo, seen = new Set(), stack = [], n = 0, i;
+    [t.Root, t.Info, t.Encrypt, t.ID].forEach(function (v) { if (v) stack.push(v); });
+    while (stack.length) {
+      var o = stack.pop();
+      if (o instanceof lib.PDFRef) {
+        if (seen.has(o)) continue;
+        seen.add(o);
+        var v = ctx.lookup(o);
+        if (v) stack.push(v);
+      } else if (o instanceof lib.PDFDict) {
+        o.entries().forEach(function (e) { stack.push(e[1]); });
+      } else if (o instanceof lib.PDFArray) {
+        for (i = 0; i < o.size(); i++) stack.push(o.get(i));
+      } else if (o instanceof lib.PDFStream) {
+        stack.push(o.dict);
+      }
+    }
+    ctx.enumerateIndirectObjects().forEach(function (e) { if (!seen.has(e[0])) { ctx.delete(e[0]); n++; } });
+    return n;
+  }
+
+  // Build a PDF from page items [{ src, index, rotate, stamps }] drawn from
+  // sources (array of PDF bytes). Stamps: { kind: "image", png, aspect, fx, fy, fw }
+  // or { kind: "text", text, fx, fy, size }. numbers: { format, position, size, start } or null.
+  function assemblePdf(lib, sources, pages, opts) {
+    opts = opts || {};
+    if (!pages || !pages.length) return Promise.reject(fail("input", "There are no pages to save."));
+    if (pages.length > LIMITS.maxPages) return Promise.reject(fail("limit", "Too many pages: " + pages.length + ". The limit is " + LIMITS.maxPages + "."));
+    var out, docs = [], copied = [];
+    return lib.PDFDocument.create().then(function (o) {
+      out = o;
+      var need = {};
+      pages.forEach(function (p) { (need[p.src] = need[p.src] || []).push(p.index); });
+      var keys = Object.keys(need);
+      return keys.reduce(function (chain, k) {
+        return chain.then(function () {
+          return (docs[k] ? Promise.resolve(docs[k]) : loadPdf(lib, sources[k])).then(function (d) {
+            docs[k] = d;
+            var n = d.getPageCount();
+            need[k].forEach(function (ix) { if (!(ix >= 0 && ix < n)) throw fail("range", "Page " + (ix + 1) + " does not exist in that file."); });
+            return out.copyPages(d, need[k]).then(function (cp) { copied[k] = cp; });
+          });
+        });
+      }, Promise.resolve());
+    }).then(function () {
+      var cursor = {};
+      var added = pages.map(function (p) {
+        var c = cursor[p.src] || 0; cursor[p.src] = c + 1;
+        var pg = out.addPage(copied[p.src][c]);
+        stripPageScripts(lib, pg);
+        var r = normAngle((pg.getRotation().angle || 0) + (p.rotate || 0));
+        pg.setRotation(lib.degrees(r));
+        return pg;
+      });
+      return drawExtras(lib, out, added, pages, opts);
+    }).then(function () {
+      out.setProducer("Doc Kit");
+      out.setCreator("Doc Kit");
+      pruneUnreachable(lib, out);
+      return out.save({ useObjectStreams: true });
+    });
+  }
+
+  function drawExtras(lib, doc, added, items, opts) {
+    var needFont = !!opts.numbers || items.some(function (p) { return (p.stamps || []).some(function (s) { return s.kind === "text"; }); });
+    return (needFont ? doc.embedFont(lib.StandardFonts.Helvetica) : Promise.resolve(null)).then(function (font) {
+      var chain = Promise.resolve();
+      added.forEach(function (pg, i) {
+        var box = pg.getCropBox(), rot = pg.getRotation().angle;
+        (items[i].stamps || []).forEach(function (s) {
+          chain = chain.then(function () {
+            if (s.kind === "image") {
+              return doc.embedPng(s.png).then(function (im) {
+                var pl = stampPlacement(box, rot, s.fx, s.fy, s.fw, s.aspect || (im.width / im.height));
+                pg.drawImage(im, { x: pl.x, y: pl.y, width: pl.width, height: pl.height, rotate: lib.degrees(pl.rotate) });
+              });
+            }
+            var text = checkWinAnsi(font, s.text);
+            var size = s.size || Math.max(4, Math.min(300, s.fw * displaySize(box, rot)[0] / font.widthOfTextAtSize(text, 1)));
+            var tw = font.widthOfTextAtSize(text, size);
+            var tp = textPlacement(box, rot, s.fx, s.fy, size, tw);
+            pg.drawText(text, { x: tp.x, y: tp.y, size: tp.size, font: font, color: lib.rgb(0.08, 0.13, 0.17), rotate: lib.degrees(tp.rotate) });
+          });
+        });
+        if (opts.numbers) {
+          chain = chain.then(function () {
+            var nb = opts.numbers, size = nb.size || 10;
+            var text = formatPageNumber(nb.format, i, added.length, nb.start || 1);
+            var tw = font.widthOfTextAtSize(text, size);
+            var np = pageNumberPlacement(box, rot, nb.position, size, tw);
+            pg.drawText(text, { x: np.x, y: np.y, size: size, font: font, color: lib.rgb(0.2, 0.24, 0.28), rotate: lib.degrees(np.rotate) });
+          });
+        }
+      });
+      return chain;
+    });
+  }
+
+  function checkWinAnsi(font, text) {
+    var t = String(text == null ? "" : text).replace(/[\r\n\t]+/g, " ").trim().slice(0, 40);
+    if (!t) throw fail("input", "Type the text to place first.");
+    try { font.encodeText(t); font.widthOfTextAtSize(t, 10); }
+    catch (e) { throw fail("charset", "That text uses characters the built-in PDF font cannot show. Use basic Latin letters, digits and punctuation, or draw it instead."); }
+    return t;
+  }
+
+  // Images to PDF: items [{ bytes, type: "jpg"|"png", width, height }].
+  function imagesToPdf(lib, items, layoutOpts) {
+    if (!items || !items.length) return Promise.reject(fail("input", "Add at least one image."));
+    if (items.length > LIMITS.maxPages) return Promise.reject(fail("limit", "Too many pages: " + items.length + ". The limit is " + LIMITS.maxPages + "."));
+    var doc;
+    return lib.PDFDocument.create().then(function (d) {
+      doc = d;
+      return items.reduce(function (chain, it) {
+        return chain.then(function () {
+          var emb = it.type === "png" ? doc.embedPng(it.bytes) : doc.embedJpg(it.bytes);
+          return emb.then(function (im) {
+            var L = pageLayout(it.width || im.width, it.height || im.height, layoutOpts);
+            var pg = doc.addPage([L.pageW, L.pageH]);
+            pg.drawImage(im, { x: L.x, y: L.y, width: L.w, height: L.h });
+          });
+        });
+      }, Promise.resolve());
+    }).then(function () {
+      doc.setProducer("Doc Kit");
+      doc.setCreator("Doc Kit");
+      return doc.save({ useObjectStreams: true });
+    });
+  }
+
+  // A small three-page example document (pages differ in size for testing).
+  function makeExamplePdf(lib) {
+    var doc;
+    return lib.PDFDocument.create().then(function (d) {
+      doc = d;
+      return doc.embedFont(lib.StandardFonts.Helvetica);
+    }).then(function (font) {
+      var sizes = [PAGE_SIZES.letter, PAGE_SIZES.letter, PAGE_SIZES.a4];
+      var titles = ["Example PDF: field report", "Example PDF: equipment list", "Example PDF: sign-off"];
+      for (var i = 0; i < 3; i++) {
+        var pg = doc.addPage([sizes[i][0], sizes[i][1]]);
+        var H = sizes[i][1];
+        pg.drawRectangle({ x: 48, y: H - 96, width: sizes[i][0] - 96, height: 2, color: lib.rgb(0.04, 0.42, 0.47) });
+        pg.drawText(titles[i], { x: 48, y: H - 84, size: 20, font: font, color: lib.rgb(0.08, 0.13, 0.17) });
+        pg.drawText("Page " + (i + 1) + " of 3. Generated in your browser as sample content.", { x: 48, y: H - 124, size: 11, font: font, color: lib.rgb(0.33, 0.38, 0.44) });
+        for (var r = 0; r < 14; r++) {
+          var y = H - 170 - r * 30;
+          pg.drawRectangle({ x: 48, y: y, width: (sizes[i][0] - 96) * (0.55 + 0.4 * ((r * 37 + i * 11) % 10) / 10), height: 8, color: lib.rgb(0.82, 0.85, 0.88) });
+        }
+      }
+      doc.setTitle("Doc Kit example");
+      doc.setProducer("Doc Kit");
+      doc.setCreator("Doc Kit");
+      return doc.save({ useObjectStreams: true });
+    });
+  }
+
+  // ------------------------------------------------ example scene
+  // Deterministic PRNG (mulberry32).
+  function rng(seed) {
+    var a = seed >>> 0;
+    return function () {
+      a = (a + 0x6D2B79F5) >>> 0;
+      var t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  // A plain receipt texture with block "words" (used when no rendered text is supplied).
+  function makeReceiptTexture(w, h, seed) {
+    w = w || 480; h = h || 760;
+    var img = createImage(w, h), d = img.data, rand = rng(seed || 7), i;
+    for (i = 0; i < d.length; i += 4) { d[i] = 246; d[i + 1] = 243; d[i + 2] = 234; d[i + 3] = 255; }
+    function rect(x0, y0, x1, y1, v) {
+      for (var y = Math.max(0, y0); y < Math.min(h, y1); y++) for (var x = Math.max(0, x0); x < Math.min(w, x1); x++) {
+        var o = (y * w + x) * 4; d[o] = d[o + 1] = d[o + 2] = v;
+      }
+    }
+    var y = 40;
+    while (y < h - 50) {
+      var x = 36;
+      var words = 1 + Math.floor(rand() * 5);
+      for (var k = 0; k < words && x < w - 60; k++) {
+        var len = 20 + Math.floor(rand() * 70);
+        rect(x, y, Math.min(w - 36, x + len), y + 12, 40);
+        x += len + 12;
+      }
+      rect(w - 100, y, w - 36, y + 12, 40);
+      y += 26 + (rand() < 0.15 ? 20 : 0);
+    }
+    return img;
+  }
+
+  var EXAMPLE_CORNERS = [[372, 92], [806, 130], [868, 840], [318, 804]];
+
+  function pointInConvex(q, x, y) {
+    for (var i = 0; i < 4; i++) if (cross(q[i], q[(i + 1) % 4], [x, y]) < 0) return false;
+    return true;
+  }
+
+  function distToQuadEdges(q, x, y) {
+    var m = Infinity;
+    for (var i = 0; i < 4; i++) m = Math.min(m, distToSegment([x, y], q[i], q[(i + 1) % 4])[0]);
+    return m;
+  }
+
+  // Distance to the quad's edges, capped at cap (cheap early exit).
+  function edgeBandDist(q, x, y, cap) {
+    var m = cap;
+    for (var i = 0; i < 4; i++) {
+      var a = q[i], b = q[(i + 1) % 4];
+      var vx = b[0] - a[0], vy = b[1] - a[1], L = vx * vx + vy * vy;
+      var t = ((x - a[0]) * vx + (y - a[1]) * vy) / L;
+      t = t < 0 ? 0 : t > 1 ? 1 : t;
+      var dx = x - a[0] - t * vx, dy = y - a[1] - t * vy, dd = dx * dx + dy * dy;
+      if (dd < m * m) m = Math.sqrt(dd);
+    }
+    return m;
+  }
+
+  // Compose the example "receipt photo": paper warped by a known homography
+  // onto a darker wood-like table, with a soft shadow and sensor noise.
+  function makeExampleScene(texture, opts) {
+    opts = opts || {};
+    var W = opts.width || 1200, Hh = opts.height || 900;
+    var tex = texture || makeReceiptTexture(480, 760, 7);
+    var corners = (opts.corners || EXAMPLE_CORNERS).map(function (p) { return p.slice(); });
+    var Hs = homographyFromPoints(corners, fullImageCorners(tex.width, tex.height)); // scene -> texture
+    var img = createImage(W, Hh), d = img.data, rand = rng(opts.seed || 11);
+    var sh = corners.map(function (p) { return [p[0] + 14, p[1] + 16]; });
+    var px = new Float64Array(4);
+    var ss = [[0.25, 0.25], [0.75, 0.25], [0.25, 0.75], [0.75, 0.75]];
+    function bbox(q, pad) {
+      var b = [Infinity, Infinity, -Infinity, -Infinity];
+      q.forEach(function (p) { b[0] = Math.min(b[0], p[0]); b[1] = Math.min(b[1], p[1]); b[2] = Math.max(b[2], p[0]); b[3] = Math.max(b[3], p[1]); });
+      return [b[0] - pad, b[1] - pad, b[2] + pad, b[3] + pad];
+    }
+    var sb = bbox(sh, 20), pb = bbox(corners, 2);
+    for (var y = 0; y < Hh; y++) {
+      for (var x = 0; x < W; x++) {
+        var o = (y * W + x) * 4, cx = x + 0.5, cy = y + 0.5;
+        var grain = 0.5 + 0.5 * Math.sin(y * 0.045 + Math.sin(x * 0.006) * 3.2);
+        var vig = 1 - 0.7 * (Math.pow((x - W / 2) / W, 2) + Math.pow((y - Hh / 2) / Hh, 2));
+        var r = (62 + 22 * grain) * vig, g = (46 + 14 * grain) * vig, b = (36 + 9 * grain) * vig;
+        if (cx >= sb[0] && cx <= sb[2] && cy >= sb[1] && cy <= sb[3]) {
+          var inS = pointInConvex(sh, cx, cy), ds = edgeBandDist(sh, cx, cy, 18) / 18;
+          var shade = inS ? 0.62 + 0.19 * (1 - ds) : 1 - 0.19 * (1 - ds);
+          r *= shade; g *= shade; b *= shade;
+        }
+        if (cx >= pb[0] && cx <= pb[2] && cy >= pb[1] && cy <= pb[3]) {
+          var cov = 0, pr = 0, pg = 0, pbb = 0, tw = tex.width, th = tex.height;
+          for (var s = 0; s < 4; s++) {
+            var sx = x + ss[s][0], sy = y + ss[s][1];
+            var hw = Hs[6] * sx + Hs[7] * sy + Hs[8];
+            var tx = (Hs[0] * sx + Hs[1] * sy + Hs[2]) / hw, ty = (Hs[3] * sx + Hs[4] * sy + Hs[5]) / hw;
+            if (!(tx >= 0 && ty >= 0 && tx <= tw && ty <= th)) continue;
+            sampleBilinear(tex, tx, ty, px, 0);
+            var light = 0.9 + 0.1 * (1 - ty / th) - 0.04 * (tx / tw);
+            cov++; pr += px[0] * light; pg += px[1] * light; pbb += px[2] * light;
+          }
+          if (cov) {
+            var a = cov / 4;
+            r = r * (1 - a) + (pr / cov) * a; g = g * (1 - a) + (pg / cov) * a; b = b * (1 - a) + (pbb / cov) * a;
+          }
+        }
+        var nz = (rand() - 0.5) * 8;
+        d[o] = r + nz; d[o + 1] = g + nz; d[o + 2] = b + nz; d[o + 3] = 255;
+      }
+    }
+    return { image: img, corners: corners };
+  }
+
+  // ------------------------------------------------- formatting helpers
+  function formatBytes(n) {
+    if (!(n >= 0)) return "0 B";
+    if (n < 1024) return n + " B";
+    if (n < 1024 * 1024) return (n / 1024).toFixed(n < 10240 ? 1 : 0) + " KB";
+    return (n / 1024 / 1024).toFixed(n < 10 * 1024 * 1024 ? 2 : 1) + " MB";
+  }
+
+  function safeFileBase(name, fallback) {
+    var s = String(name == null ? "" : name).replace(/\.[^.]{1,5}$/, "").replace(/[^A-Za-z0-9._-]+/g, "_").replace(/^[._-]+/, "").slice(0, 60);
+    return s || fallback || "file";
+  }
+
+  // Paper size from the browser language: Letter where it is the everyday size
+  // (US, Canada, Mexico, the Philippines, Chile, Colombia, Venezuela and Central
+  // America), A4 everywhere else (ISO 216). No region means Letter.
+  var LETTER_REGIONS = ["US", "CA", "MX", "PH", "CL", "CO", "VE", "GT", "CR", "PA", "DO", "PR", "SV", "NI", "HN"];
+  function paperForLocale(lang) {
+    var m = /^[a-z]{2,3}(?:-[A-Za-z]{4})?-([A-Za-z]{2})\b/.exec(String(lang || ""));
+    if (!m) return "letter";
+    return LETTER_REGIONS.indexOf(m[1].toUpperCase()) >= 0 ? "letter" : "a4";
+  }
+  // Output name from the files the user added: one file keeps its name, several get "-merged".
+  function outputBaseName(names, fallback) {
+    var real = (names || []).filter(Boolean);
+    if (!real.length) return fallback;
+    var base = safeFileBase(real[0], fallback);
+    return real.length > 1 ? (base + "-merged").slice(0, 60) : base;
+  }
+
+  function capScale(w, h, maxEdge) {
+    var m = Math.max(w, h);
+    return m > maxEdge ? maxEdge / m : 1;
+  }
+
+  return {
+    LIMITS: LIMITS, FILTERS: FILTERS, PAGE_SIZES: PAGE_SIZES, FIT_LONG_EDGE_PT: FIT_LONG_EDGE_PT, EXAMPLE_CORNERS: EXAMPLE_CORNERS,
+    solveLinear: solveLinear, homographyFromPoints: homographyFromPoints, applyH: applyH, invert3: invert3, mul3: mul3,
+    polygonArea: polygonArea, isConvexQuad: isConvexQuad, orderCorners: orderCorners, fullImageCorners: fullImageCorners,
+    createImage: createImage, toGray: toGray, downscaleGray: downscaleGray, gaussianBlur: gaussianBlur, sobel: sobel, otsu: otsu,
+    convexHull: convexHull, maxAreaQuad: maxAreaQuad, fitLine: fitLine, detectDocument: detectDocument,
+    sampleBilinear: sampleBilinear, outputSizeForQuad: outputSizeForQuad, warpPerspective: warpPerspective,
+    filterGrayscale: filterGrayscale, filterSauvola: filterSauvola, filterEnhance: filterEnhance, applyFilter: applyFilter,
+    rotate90: rotate90, processScan: processScan,
+    mmToPt: mmToPt, pageLayout: pageLayout, parseRange: parseRange, chunkIndices: chunkIndices,
+    normAngle: normAngle, displaySize: displaySize, displayToUser: displayToUser, stampPlacement: stampPlacement,
+    textPlacement: textPlacement, formatPageNumber: formatPageNumber, pageNumberPlacement: pageNumberPlacement,
+    loadPdf: loadPdf, stripPageScripts: stripPageScripts, assemblePdf: assemblePdf, imagesToPdf: imagesToPdf, makeExamplePdf: makeExamplePdf,
+    rng: rng, makeReceiptTexture: makeReceiptTexture, makeExampleScene: makeExampleScene,
+    formatBytes: formatBytes, safeFileBase: safeFileBase, capScale: capScale, paperForLocale: paperForLocale, outputBaseName: outputBaseName
+  };
+})();
+</script>
+<script id="ui">
+(function () {
+  "use strict";
+  var C = DocCore;
+
+  // Pinned third-party libraries. Integrity hashes are of the npm tarball
+  // files, which jsDelivr serves byte for byte.
+  var LIBS = {
+    pdflib: { url: "https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js", sri: "sha384-weMABwrltA6jWR8DDe9Jp5blk+tZQh7ugpCsF3JwSA53WZM9/14PjS5LAJNHNjAI" },
+    pdfjs: { url: "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/legacy/build/pdf.min.js", sri: "sha384-OemFRmhjDZwhIKuUld0HJozkF2YErsgDaCL41trxGQZt4/WgnopJQqQl2DvDZ07Z" },
+    pdfjsWorker: { url: "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/legacy/build/pdf.worker.min.js", sri: "sha384-sS8B4COeBqzQV9DaPpp5cbpF+xz2jPcFbN3L8FL3/dx0RMC6WLUwTUOFm0iFb1lw" }
+  };
+  var MAX_BYTES = C.LIMITS.maxFileBytes, MAX_PAGES = C.LIMITS.maxPages, WORK_EDGE = C.LIMITS.workMaxEdge;
+  var PREVIEW_EDGE = 1000, MAX_CANVAS_AREA = 16000000;
+
+  function $(id) { return document.getElementById(id); }
+  function el(tag, attrs, kids) {
+    var n = document.createElement(tag);
+    if (attrs) Object.keys(attrs).forEach(function (k) {
+      var v = attrs[k];
+      if (v == null || v === false) return;
+      if (k === "text") n.textContent = v;
+      else if (k === "class") n.className = v;
+      else n.setAttribute(k, v === true ? "" : String(v));
+    });
+    (kids || []).forEach(function (c) { if (c != null) n.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+    return n;
+  }
+  function clear(n) { while (n.firstChild) n.removeChild(n.firstChild); }
+  function setStatus(id, msg, kind) { var s = $(id); s.textContent = msg; s.className = "status " + (kind || "ok"); }
+  function cleanText(s, max) { return String(s == null ? "" : s).replace(/[\u0000-\u001f\u007f-\u009f‪-‮⁦-⁩]/g, " ").trim().slice(0, max || 120); }
+  function nextFrame() { return new Promise(function (r) { setTimeout(r, 0); }); }
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem("doc-kit:" + k); localStorage.setItem("doc-kit:" + k, v); } catch (e) { return null; } }
+  var uid = 0; function newId() { return "i" + (++uid); }
+
+  var EMBEDDED = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
+
+  // ----------------------------------------------------- script loading
+  function loadScript(lib) {
+    return new Promise(function (resolve, reject) {
+      var s = document.createElement("script");
+      s.src = lib.url; s.integrity = lib.sri; s.crossOrigin = "anonymous"; s.referrerPolicy = "no-referrer"; s.async = true;
+      s.addEventListener("load", function () { resolve(); });
+      s.addEventListener("error", function () { reject(new Error("load failed: " + lib.url)); });
+      document.head.appendChild(s);
+    });
+  }
+  var pdfLibReady = null, pdfjsReady = null, pdfjsMode = "none";
+  function getPdfLib() {
+    if (!pdfLibReady) pdfLibReady = (window.PDFLib ? Promise.resolve() : loadScript(LIBS.pdflib)).then(function () {
+      if (!window.PDFLib || !window.PDFLib.PDFDocument) throw new Error("pdf-lib missing");
+      return window.PDFLib;
+    });
+    return pdfLibReady;
+  }
+  function getPdfjs() {
+    if (!pdfjsReady) pdfjsReady = (window.pdfjsLib ? Promise.resolve() : loadScript(LIBS.pdfjs)).then(function () {
+      var lib = window.pdfjsLib;
+      if (!lib || !lib.getDocument) throw new Error("pdf.js missing");
+      return startPdfjsWorker(lib).then(function (mode) { pdfjsMode = mode; return lib; });
+    });
+    return pdfjsReady;
+  }
+  // A real worker from a blob URL that imports the pinned worker script. If
+  // the page's policy blocks that, run the worker code on the main thread
+  // (loaded as an integrity-checked script).
+  function startPdfjsWorker(lib) {
+    return new Promise(function (resolve, reject) {
+      var w, url, done = false;
+      function fallback() {
+        if (done) return; done = true;
+        try { if (w) w.terminate(); } catch (e) { /* ignore */ }
+        if (url) URL.revokeObjectURL(url);
+        loadScript(LIBS.pdfjsWorker).then(function () {
+          if (!window.pdfjsWorker) throw new Error("worker code missing");
+          lib.GlobalWorkerOptions.workerSrc = LIBS.pdfjsWorker.url;
+          resolve("main thread");
+        }).catch(reject);
+      }
+      try {
+        var code = "try{importScripts(" + JSON.stringify(LIBS.pdfjsWorker.url) + ");self.postMessage({dkReady:1})}catch(e){self.postMessage({dkReady:0})}";
+        url = URL.createObjectURL(new Blob([code], { type: "text/javascript" }));
+        w = new Worker(url);
+        var timer = setTimeout(fallback, 20000);
+        w.addEventListener("message", function onMsg(e) {
+          if (!e.data || e.data.dkReady === undefined || done) return;
+          clearTimeout(timer);
+          w.removeEventListener("message", onMsg);
+          if (!e.data.dkReady) { fallback(); return; }
+          done = true;
+          URL.revokeObjectURL(url);
+          lib.GlobalWorkerOptions.workerPort = w;
+          resolve("worker");
+        });
+        w.addEventListener("error", function (ev) { if (ev && ev.preventDefault) ev.preventDefault(); clearTimeout(timer); fallback(); });
+      } catch (e) { fallback(); }
+    });
+  }
+  function openPdfjs(lib, bytes) {
+    return lib.getDocument({
+      data: bytes.slice(), isEvalSupported: false, enableXfa: false, disableAutoFetch: true, disableStream: true,
+      stopAtErrors: false, useSystemFonts: false, verbosity: 0
+    }).promise;
+  }
+  function renderPdfPage(doc, pageNo, maxW, maxH, rotation) {
+    return doc.getPage(pageNo).then(function (page) {
+      var rot = ((page.rotate + (rotation || 0)) % 360 + 360) % 360;
+      var v1 = page.getViewport({ scale: 1, rotation: rot });
+      var dpr = Math.min(2, window.devicePixelRatio || 1);
+      var scale = Math.min(maxW / v1.width, maxH / v1.height) * dpr;
+      var vp = page.getViewport({ scale: scale, rotation: rot });
+      var cv = document.createElement("canvas");
+      cv.width = Math.max(1, Math.floor(vp.width)); cv.height = Math.max(1, Math.floor(vp.height));
+      cv.style.width = Math.round(vp.width / dpr) + "px";
+      var ctx = cv.getContext("2d");
+      ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, cv.width, cv.height);
+      return page.render({ canvasContext: ctx, viewport: vp }).promise.then(function () { page.cleanup(); return cv; });
+    });
+  }
+
+  // --------------------------------------------- pixel worker (blob URL)
+  var pix = { worker: null, seq: 0, pending: {}, mode: "main thread" };
+  (function startPixelWorker() {
+    try {
+      var core = $("core").textContent;
+      var handler = "\nself.onmessage=function(e){var m=e.data,r,t=[];try{" +
+        "if(m.op==='detect'){r=DocCore.detectDocument(m.img);}" +
+        "else if(m.op==='process'){var o=DocCore.processScan(m.img,m.corners,m.filter,m.turns,m.maxEdge);r={width:o.width,height:o.height,data:o.data};t=[o.data.buffer];}" +
+        "else if(m.op==='ping'){r='pong';}" +
+        "self.postMessage({id:m.id,result:r},t);}catch(err){self.postMessage({id:m.id,error:{code:err.code||'error',message:String(err.message||err)}});}};";
+      var url = URL.createObjectURL(new Blob([core + handler], { type: "text/javascript" }));
+      var w = new Worker(url);
+      URL.revokeObjectURL(url);
+      w.addEventListener("message", function (e) {
+        var m = e.data, p = pix.pending[m.id];
+        if (!p) return;
+        delete pix.pending[m.id];
+        if (m.error) { var er = new Error(m.error.message); er.code = m.error.code; p.reject(er); } else p.resolve(m.result);
+      });
+      w.addEventListener("error", function (ev) {
+        if (ev && ev.preventDefault) ev.preventDefault();
+        pix.worker = null; pix.mode = "main thread";
+        Object.keys(pix.pending).forEach(function (k) { pix.pending[k].retry(); });
+        pix.pending = {};
+      });
+      pix.worker = w;
+      pix.mode = "worker";
+    } catch (e) { pix.worker = null; }
+  })();
+  function runMain(op, args) {
+    if (op === "detect") return C.detectDocument(args.img);
+    var o = C.processScan(args.img, args.corners, args.filter, args.turns, args.maxEdge);
+    return o;
+  }
+  function pixelJob(op, args) {
+    if (!pix.worker) return nextFrame().then(function () { return runMain(op, args); });
+    return new Promise(function (resolve, reject) {
+      var id = ++pix.seq, msg = { id: id, op: op };
+      Object.keys(args).forEach(function (k) { msg[k] = args[k]; });
+      var copy = { width: args.img.width, height: args.img.height, data: new Uint8ClampedArray(args.img.data) };
+      msg.img = copy;
+      pix.pending[id] = { resolve: resolve, reject: reject, retry: function () { nextFrame().then(function () { resolve(runMain(op, args)); }).catch(reject); } };
+      try { pix.worker.postMessage(msg, [copy.data.buffer]); }
+      catch (e) { delete pix.pending[id]; pix.worker = null; resolve(runMain(op, args)); }
+    });
+  }
+
+  // ------------------------------------------------- image helpers
+  function decodeImage(blob) {
+    if (window.createImageBitmap) {
+      return createImageBitmap(blob, { imageOrientation: "from-image" }).catch(function () { return decodeViaImg(blob); });
+    }
+    return decodeViaImg(blob);
+  }
+  function decodeViaImg(blob) {
+    return new Promise(function (resolve, reject) {
+      var url = URL.createObjectURL(blob), img = new Image();
+      img.addEventListener("load", function () { resolve(img); setTimeout(function () { URL.revokeObjectURL(url); }, 1000); });
+      img.addEventListener("error", function () { URL.revokeObjectURL(url); reject(new Error("decode")); });
+      img.src = url;
+    });
+  }
+  function srcSize(src) { return { w: src.naturalWidth || src.width, h: src.naturalHeight || src.height }; }
+  function drawScaled(src, maxEdge, white) {
+    var s = srcSize(src), k = C.capScale(s.w, s.h, maxEdge);
+    k = Math.min(k, Math.sqrt(MAX_CANVAS_AREA / (s.w * s.h)));
+    var cv = document.createElement("canvas");
+    cv.width = Math.max(1, Math.round(s.w * k)); cv.height = Math.max(1, Math.round(s.h * k));
+    var ctx = cv.getContext("2d");
+    if (white) { ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, cv.width, cv.height); }
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(src, 0, 0, cv.width, cv.height);
+    return cv;
+  }
+  function canvasToBlob(cv, type, q) {
+    return new Promise(function (resolve, reject) {
+      cv.toBlob(function (b) { if (b) resolve(b); else reject(new Error("encode")); }, type, q);
+    });
+  }
+  function imageDataToCanvas(img) {
+    var cv = document.createElement("canvas");
+    cv.width = img.width; cv.height = img.height;
+    var id = cv.getContext("2d").createImageData(img.width, img.height);
+    id.data.set(img.data);
+    cv.getContext("2d").putImageData(id, 0, 0);
+    return cv;
+  }
+  function canvasImage(cv) {
+    var d = cv.getContext("2d").getImageData(0, 0, cv.width, cv.height);
+    return { width: d.width, height: d.height, data: d.data };
+  }
+  function blobBytes(b) { return b.arrayBuffer().then(function (a) { return new Uint8Array(a); }); }
+  function sniffImageType(bytes) {
+    if (bytes[0] === 0xff && bytes[1] === 0xd8) return "jpg";
+    if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) return "png";
+    return null;
+  }
+  function isPdfBytes(b) {
+    for (var i = 0; i < Math.min(1024, b.length - 4); i++) if (b[i] === 0x25 && b[i + 1] === 0x50 && b[i + 2] === 0x44 && b[i + 3] === 0x46) return true;
+    return false;
+  }
+
+  // -------------------------------------------------------- downloads
+  function downloadNote() {
+    return EMBEDDED ? el("p", { class: "note", text: "This viewer may block downloads. If nothing is saved, open the GitHub Pages version of Doc Kit, where Download works." }) : null;
+  }
+  function downloadButton(getBlob, filename, statusEl) {
+    var b = el("button", { type: "button", class: "primary", text: "Download" });
+    b.addEventListener("click", function () {
+      var blob = getBlob(), url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url; a.download = filename; a.rel = "noopener"; a.style.display = "none";
+      document.body.appendChild(a);
+      try { a.click(); statusEl.textContent = "Your browser was asked to save " + filename + ". Check its downloads list."; }
+      catch (e) { statusEl.textContent = "This browser did not allow the download."; }
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+    });
+    return b;
+  }
+  // One output block: name, sizes, Download, a preview strip.
+  function outputItem(bytesOrBlob, filename, mime, summary, previewFn) {
+    var blob = bytesOrBlob instanceof Blob ? bytesOrBlob : new Blob([bytesOrBlob], { type: mime });
+    var st = el("span", { class: "help" });
+    var prev = el("div", { class: "previews", "aria-label": "Preview of " + filename });
+    var item = el("div", { class: "out-item" }, [
+      el("div", { class: "out-head" }, [
+        el("strong", { text: filename }),
+        el("span", { class: "num help", text: summary + ", " + C.formatBytes(blob.size) }),
+        downloadButton(function () { return blob; }, filename, st)
+      ]),
+      st, prev
+    ]);
+    if (previewFn) previewFn(prev);
+    return item;
+  }
+  function previewPdfInto(container, bytes, maxPages) {
+    container.appendChild(el("span", { class: "help", text: "Drawing preview." }));
+    getPdfjs().then(function (lib) {
+      return openPdfjs(lib, bytes).then(function (doc) {
+        clear(container);
+        var n = Math.min(doc.numPages, maxPages || 8), chain = Promise.resolve();
+        for (var i = 1; i <= n; i++) (function (k) {
+          chain = chain.then(function () { return renderPdfPage(doc, k, 220, 150, 0); }).then(function (cv) { cv.setAttribute("aria-label", "Page " + k); cv.setAttribute("role", "img"); container.appendChild(cv); });
+        })(i);
+        return chain.then(function () {
+          if (doc.numPages > n) container.appendChild(el("span", { class: "help num", text: "+" + (doc.numPages - n) + " more" }));
+          return doc.destroy();
+        });
+      });
+    }).catch(function () {
+      clear(container);
+      container.appendChild(el("span", { class: "help", text: "Preview is not available because pdf.js did not load. The PDF itself is complete." }));
+    });
+  }
+
+  // ------------------------------------------------------------- tabs
+  var TABS = ["scan", "pdf", "img"];
+  function selectTab(name, focus) {
+    TABS.forEach(function (t) {
+      var on = t === name, b = $("tab-" + t);
+      b.setAttribute("aria-selected", on ? "true" : "false");
+      b.tabIndex = on ? 0 : -1;
+      $("panel-" + t).hidden = !on;
+      if (on && focus) b.focus();
+    });
+    store("tab", name);
+    if (name === "scan") drawEditor();
+    if (name === "pdf") drawPlace();
+  }
+  TABS.forEach(function (t, i) {
+    var b = $("tab-" + t);
+    b.addEventListener("click", function () { selectTab(t); });
+    b.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+        e.preventDefault();
+        selectTab(TABS[(i + (e.key === "ArrowRight" ? 1 : TABS.length - 1)) % TABS.length], true);
+      }
+    });
+  });
+
+  function wireDrop(zoneId, onFiles) {
+    var z = $(zoneId);
+    z.addEventListener("dragover", function (e) { if (e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], "Files") >= 0) { e.preventDefault(); z.classList.add("over"); } });
+    z.addEventListener("dragleave", function () { z.classList.remove("over"); });
+    z.addEventListener("drop", function (e) {
+      if (!e.dataTransfer || !e.dataTransfer.files || !e.dataTransfer.files.length) return;
+      e.preventDefault(); z.classList.remove("over");
+      onFiles(Array.prototype.slice.call(e.dataTransfer.files));
+    });
+  }
+  function wireFileInput(id, onFiles) {
+    $(id).addEventListener("change", function (e) {
+      var f = Array.prototype.slice.call(e.target.files || []);
+      e.target.value = "";
+      if (f.length) onFiles(f);
+    });
+  }
+
+  // Shared reorderable card list. items: array; render(item, index) -> li.
+  function makeSortable(listEl, getItems, onMove) {
+    var dragFrom = -1;
+    listEl.addEventListener("dragstart", function (e) {
+      var li = e.target.closest && e.target.closest("li.card");
+      if (!li) return;
+      dragFrom = Array.prototype.indexOf.call(listEl.children, li);
+      li.classList.add("dragging");
+      try { e.dataTransfer.setData("text/plain", "page"); e.dataTransfer.effectAllowed = "move"; } catch (er) { /* ignore */ }
+    });
+    listEl.addEventListener("dragend", function (e) { var li = e.target.closest && e.target.closest("li.card"); if (li) li.classList.remove("dragging"); dragFrom = -1; });
+    listEl.addEventListener("dragover", function (e) { if (dragFrom >= 0) e.preventDefault(); });
+    listEl.addEventListener("drop", function (e) {
+      if (dragFrom < 0) return;
+      e.preventDefault();
+      var li = e.target.closest && e.target.closest("li.card");
+      var to = li ? Array.prototype.indexOf.call(listEl.children, li) : getItems().length - 1;
+      if (to >= 0 && to !== dragFrom) onMove(dragFrom, to);
+      dragFrom = -1;
+    });
+  }
+  function moveItem(arr, from, to) { var x = arr.splice(from, 1)[0]; arr.splice(to, 0, x); }
+  function cardTools(index, count, label, handlers) {
+    var t = el("div", { class: "tools" });
+    var up = el("button", { type: "button", "aria-label": "Move " + label + " earlier", title: "Move earlier", text: "←" });
+    var dn = el("button", { type: "button", "aria-label": "Move " + label + " later", title: "Move later", text: "→" });
+    var rot = el("button", { type: "button", "aria-label": "Rotate " + label + " right", title: "Rotate right", text: "↻" });
+    var del = el("button", { type: "button", "aria-label": "Delete " + label, title: "Delete", text: "Delete" });
+    up.disabled = index === 0; dn.disabled = index === count - 1;
+    up.addEventListener("click", handlers.up); dn.addEventListener("click", handlers.down);
+    rot.addEventListener("click", handlers.rotate); del.addEventListener("click", handlers.del);
+    [up, dn, rot, del].forEach(function (b) { t.appendChild(b); });
+    return t;
+  }
+
+  // =================================================== SCAN TO PDF
+  var scan = { pages: [], sel: -1, cache: null, busy: 0, quality: 0.85, queue: Promise.resolve() };
+
+  function scanAddFiles(files) {
+    var imgs = files.filter(function (f) { return /^image\//.test(f.type) || /\.(jpe?g|png|webp|gif|bmp|heic|heif|avif)$/i.test(f.name); });
+    if (!imgs.length) { setStatus("scan-status", "Those files are not images. Add photos (JPEG, PNG, WebP or HEIC where the browser supports it).", "bad"); return; }
+    var big = imgs.filter(function (f) { return f.size > MAX_BYTES; });
+    imgs = imgs.filter(function (f) { return f.size <= MAX_BYTES; });
+    var room = MAX_PAGES - scan.pages.length;
+    var msgs = [];
+    if (big.length) msgs.push(big.length + " file" + (big.length > 1 ? "s were" : " was") + " over 50 MB and skipped.");
+    if (imgs.length > room) { msgs.push("Only " + Math.max(0, room) + " more page" + (room === 1 ? "" : "s") + " fit under the 300-page limit; the rest were skipped."); imgs = imgs.slice(0, Math.max(0, room)); }
+    imgs.forEach(function (f, i) {
+      scan.queue = scan.queue.then(function () {
+        setStatus("scan-status", "Reading photo " + (i + 1) + " of " + imgs.length + ". " + msgs.join(" "), msgs.length ? "warn" : "ok");
+        return scanAddImage(f, f.name, false);
+      }).catch(function (e) {
+        msgs.push("One photo could not be read (" + (e && e.code === "decode" ? "unsupported format" : "decode failed") + ").");
+      });
+    });
+    scan.queue = scan.queue.then(function () {
+      var n = scan.pages.length;
+      setStatus("scan-status", (msgs.length ? msgs.join(" ") + " " : "") + n + " page" + (n === 1 ? "" : "s") + " ready. Check the corners, then make the PDF.", msgs.length ? "warn" : "ok");
+    });
+  }
+
+  function scanAddImage(blob, name, example) {
+    return decodeImage(blob).catch(function () { var e = new Error("decode"); e.code = "decode"; throw e; }).then(function (bmp) {
+      var work = drawScaled(bmp, WORK_EDGE, true);
+      var prev = drawScaled(work, PREVIEW_EDGE, true);
+      if (bmp.close) bmp.close();
+      var img = canvasImage(work);
+      return Promise.all([canvasToBlob(work, "image/jpeg", 0.92), pixelJob("detect", { img: img })]).then(function (r) {
+        var p = {
+          id: newId(), name: cleanText(name, 80), example: !!example, srcBlob: r[0], srcW: work.width, srcH: work.height,
+          preview: prev, corners: r[1].corners, confident: r[1].confident, filter: "enhance", turns: 0,
+          outBlob: null, outURL: null, outW: 0, outH: 0, quality: null
+        };
+        scan.pages.push(p);
+        scan.cache = { id: p.id, img: img };
+        if (scan.sel < 0 || example) scan.sel = scan.pages.length - 1;
+        return processScanPage(p).then(function () { renderScanPages(); if (scan.pages[scan.sel] === p) selectScanPage(scan.sel); });
+      });
+    });
+  }
+
+  function scanSource(p) {
+    if (scan.cache && scan.cache.id === p.id) return Promise.resolve(scan.cache.img);
+    return decodeImage(p.srcBlob).then(function (bmp) {
+      var cv = drawScaled(bmp, WORK_EDGE + 10, true);
+      if (bmp.close) bmp.close();
+      var img = canvasImage(cv);
+      scan.cache = { id: p.id, img: img };
+      return img;
+    });
+  }
+
+  var procToken = {};
+  function processScanPage(p) {
+    var token = procToken[p.id] = (procToken[p.id] || 0) + 1;
+    scan.busy++;
+    return scanSource(p).then(function (img) {
+      return pixelJob("process", { img: img, corners: p.corners, filter: p.filter, turns: p.turns, maxEdge: WORK_EDGE });
+    }).then(function (out) {
+      if (procToken[p.id] !== token) return;
+      var cv = imageDataToCanvas(out);
+      return canvasToBlob(cv, "image/jpeg", scan.quality).then(function (b) {
+        if (procToken[p.id] !== token) return;
+        if (p.outURL) URL.revokeObjectURL(p.outURL);
+        p.outBlob = b; p.outURL = URL.createObjectURL(b); p.outW = cv.width; p.outH = cv.height; p.quality = scan.quality;
+      });
+    }).catch(function (e) {
+      setStatus("scan-status", (e && e.code === "quad" ? e.message : "This page could not be flattened. Try Use full image, or move the corners.") , "bad");
+    }).then(function () { scan.busy--; });
+  }
+
+  function renderScanPages() {
+    var list = $("scan-pages");
+    clear(list);
+    scan.pages.forEach(function (p, i) {
+      var label = "page " + (i + 1);
+      var thumb = el("button", { type: "button", class: "thumb", "aria-label": "Edit " + label });
+      if (p.outURL) thumb.appendChild(el("img", { src: p.outURL, alt: "" }));
+      thumb.addEventListener("click", function () { selectScanPage(i); });
+      var chip = p.confident ? el("span", { class: "chip good", text: "Edges found" }) : el("span", { class: "chip warn", text: "Detection unsure" });
+      var li = el("li", { class: "card", draggable: "true", "aria-current": i === scan.sel ? "true" : "false" }, [
+        thumb,
+        el("div", { class: "meta" }, [el("span", { text: (i + 1) + ". " + (p.example ? "Example image" : p.name) })]),
+        chip,
+        cardTools(i, scan.pages.length, label, {
+          up: function () { moveScan(i, i - 1); }, down: function () { moveScan(i, i + 1); },
+          rotate: function () { p.turns = (p.turns + 1) % 4; processScanPage(p).then(function () { renderScanPages(); if (scan.sel === i) updateScanResult(); }); },
+          del: function () { deleteScan(i); }
+        })
+      ]);
+      list.appendChild(li);
+    });
+    $("scan-count").textContent = scan.pages.length + " page" + (scan.pages.length === 1 ? "" : "s");
+    $("scan-make").disabled = scan.pages.length === 0;
+  }
+  function moveScan(from, to) {
+    if (to < 0 || to >= scan.pages.length) return;
+    var selId = scan.pages[scan.sel] && scan.pages[scan.sel].id;
+    moveItem(scan.pages, from, to);
+    scan.sel = scan.pages.findIndex(function (p) { return p.id === selId; });
+    renderScanPages();
+    var btns = $("scan-pages").children[to] && $("scan-pages").children[to].querySelectorAll(".tools button");
+    if (btns && btns.length) (btns[to < from ? 0 : 1].disabled ? btns[2] : btns[to < from ? 0 : 1]).focus();
+    $("scan-edit-title").textContent = scan.sel >= 0 ? "Edit page " + (scan.sel + 1) : "Edit page";
+  }
+  makeSortable($("scan-pages"), function () { return scan.pages; }, moveScan);
+  function deleteScan(i) {
+    var p = scan.pages[i];
+    if (p.outURL) URL.revokeObjectURL(p.outURL);
+    scan.pages.splice(i, 1);
+    if (scan.cache && scan.cache.id === p.id) scan.cache = null;
+    if (scan.sel >= scan.pages.length) scan.sel = scan.pages.length - 1;
+    renderScanPages();
+    selectScanPage(scan.sel);
+    setStatus("scan-status", scan.pages.length ? "Page deleted." : "No pages. Add photos to start.", "ok");
+  }
+
+  function selectScanPage(i) {
+    scan.sel = i;
+    Array.prototype.forEach.call($("scan-pages").children, function (li, k) { li.setAttribute("aria-current", k === i ? "true" : "false"); });
+    var p = scan.pages[i];
+    $("scan-edit-title").textContent = p ? "Edit page " + (i + 1) : "Edit page";
+    ["scan-auto", "scan-full", "scan-rot-l", "scan-rot-r"].forEach(function (id) { $(id).disabled = !p; });
+    Array.prototype.forEach.call($("scan-filter").querySelectorAll("button"), function (b) {
+      b.disabled = !p; b.setAttribute("aria-pressed", p && b.getAttribute("data-filter") === p.filter ? "true" : "false");
+    });
+    var chip = $("scan-detect-chip");
+    if (!p) { chip.className = "chip muted"; chip.textContent = "No page"; }
+    else if (p.example) { chip.className = "chip warn"; chip.textContent = "Example image"; }
+    else if (p.confident) { chip.className = "chip good"; chip.textContent = "Edges found"; }
+    else { chip.className = "chip warn"; chip.textContent = "Detection unsure: check corners"; }
+    drawEditor();
+    updateScanResult();
+  }
+  function updateScanResult() {
+    var p = scan.pages[scan.sel], im = $("scan-result");
+    if (!p || !p.outURL) { im.removeAttribute("src"); $("scan-result-meta").textContent = ""; return; }
+    im.src = p.outURL;
+    $("scan-result-meta").textContent = p.outW + " x " + p.outH + " px, " + C.formatBytes(p.outBlob.size) + " as JPEG";
+  }
+
+  // ----- corner editor
+  var ed = { drag: -1, active: 0, scale: 1 };
+  function drawEditor() {
+    var cv = $("scan-canvas"), ctx = cv.getContext("2d"), p = scan.pages[scan.sel];
+    if (!p) { cv.width = 600; cv.height = 300; ctx.clearRect(0, 0, 600, 300); return; }
+    var prev = p.preview;
+    if (cv.width !== prev.width || cv.height !== prev.height) { cv.width = prev.width; cv.height = prev.height; }
+    var k = prev.width / p.srcW; ed.scale = k;
+    ctx.drawImage(prev, 0, 0);
+    var css = cv.getBoundingClientRect().width || prev.width, px = prev.width / css;
+    var q = p.corners.map(function (c) { return [c[0] * k, c[1] * k]; });
+    var styles = getComputedStyle(document.documentElement);
+    var mark = styles.getPropertyValue("--reg").trim() || "#d6157f";
+    ctx.save();
+    ctx.fillStyle = "rgba(0,0,0,0.35)";
+    ctx.beginPath(); ctx.rect(0, 0, cv.width, cv.height);
+    ctx.moveTo(q[0][0], q[0][1]); for (var i = 3; i >= 1; i--) ctx.lineTo(q[i][0], q[i][1]); ctx.closePath();
+    ctx.fill("evenodd");
+    ctx.lineWidth = 2.5 * px; ctx.strokeStyle = mark;
+    ctx.beginPath(); ctx.moveTo(q[0][0], q[0][1]); for (i = 1; i < 4; i++) ctx.lineTo(q[i][0], q[i][1]); ctx.closePath(); ctx.stroke();
+    var labels = ["1", "2", "3", "4"];
+    for (i = 0; i < 4; i++) {
+      var r = (ed.active === i ? 12 : 10) * px;
+      ctx.beginPath(); ctx.arc(q[i][0], q[i][1], r, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255,255,255,0.85)"; ctx.fill();
+      ctx.lineWidth = (ed.active === i ? 3.5 : 2.5) * px; ctx.strokeStyle = mark; ctx.stroke();
+      ctx.fillStyle = "#141619"; ctx.font = "600 " + Math.round(11 * px) + "px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(labels[i], q[i][0], q[i][1] + 0.5 * px);
+    }
+    if (p.example) {
+      var fs = Math.round(14 * px), pad = 6 * px;
+      ctx.font = "600 " + fs + "px sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "top";
+      var tw = ctx.measureText("Example image").width;
+      ctx.fillStyle = "rgba(20,22,25,0.85)"; ctx.fillRect(8 * px, 8 * px, tw + 2 * pad, fs + 2 * pad);
+      ctx.fillStyle = "#ffffff"; ctx.fillText("Example image", 8 * px + pad, 8 * px + pad);
+    }
+    ctx.restore();
+  }
+  function edPoint(e) {
+    var cv = $("scan-canvas"), r = cv.getBoundingClientRect();
+    return [(e.clientX - r.left) * cv.width / r.width, (e.clientY - r.top) * cv.height / r.height, cv.width / r.width];
+  }
+  var edCanvas = $("scan-canvas");
+  edCanvas.addEventListener("pointerdown", function (e) {
+    var p = scan.pages[scan.sel]; if (!p) return;
+    var pt = edPoint(e), k = ed.scale, best = -1, bd = Infinity;
+    p.corners.forEach(function (c, i) { var d = Math.hypot(c[0] * k - pt[0], c[1] * k - pt[1]); if (d < bd) { bd = d; best = i; } });
+    if (bd > 36 * pt[2]) return;
+    ed.drag = best; ed.active = best;
+    edCanvas.setPointerCapture(e.pointerId);
+    e.preventDefault();
+    drawEditor();
+  });
+  edCanvas.addEventListener("pointermove", function (e) {
+    if (ed.drag < 0) return;
+    var p = scan.pages[scan.sel], pt = edPoint(e);
+    p.corners[ed.drag] = [Math.max(0, Math.min(p.srcW, pt[0] / ed.scale)), Math.max(0, Math.min(p.srcH, pt[1] / ed.scale))];
+    drawEditor();
+  });
+  function endDrag() {
+    if (ed.drag < 0) return;
+    ed.drag = -1;
+    cornersChanged();
+  }
+  edCanvas.addEventListener("pointerup", endDrag);
+  edCanvas.addEventListener("pointercancel", endDrag);
+  edCanvas.addEventListener("keydown", function (e) {
+    var p = scan.pages[scan.sel]; if (!p) return;
+    if (/^[1-4]$/.test(e.key)) { ed.active = +e.key - 1; drawEditor(); e.preventDefault(); return; }
+    var step = (e.shiftKey ? 10 : 1) / ed.scale, c = p.corners[ed.active], d = null;
+    if (e.key === "ArrowLeft") d = [-step, 0]; else if (e.key === "ArrowRight") d = [step, 0];
+    else if (e.key === "ArrowUp") d = [0, -step]; else if (e.key === "ArrowDown") d = [0, step];
+    if (!d) return;
+    e.preventDefault();
+    p.corners[ed.active] = [Math.max(0, Math.min(p.srcW, c[0] + d[0])), Math.max(0, Math.min(p.srcH, c[1] + d[1]))];
+    drawEditor();
+    clearTimeout(ed.kt); ed.kt = setTimeout(cornersChanged, 250);
+  });
+  function cornersChanged() {
+    var p = scan.pages[scan.sel]; if (!p) return;
+    if (!C.isConvexQuad(p.corners)) { setStatus("scan-status", "The corners cross each other. Move them so the outline has four clean sides.", "bad"); return; }
+    p.corners = C.orderCorners(p.corners);
+    p.confident = true;
+    drawEditor();
+    processScanPage(p).then(function () { renderScanPages(); updateScanResult(); setStatus("scan-status", "Page " + (scan.sel + 1) + " updated.", "ok"); });
+  }
+  $("scan-auto").addEventListener("click", function () {
+    var p = scan.pages[scan.sel]; if (!p) return;
+    setStatus("scan-status", "Looking for the page edges.", "ok");
+    scanSource(p).then(function (img) { return pixelJob("detect", { img: img }); }).then(function (r) {
+      p.corners = r.corners; p.confident = r.confident;
+      setStatus("scan-status", r.confident ? "Page edges found." : "No clear page outline. Using the full image; drag the corners to adjust.", r.confident ? "ok" : "warn");
+      return processScanPage(p);
+    }).then(function () { renderScanPages(); selectScanPage(scan.sel); });
+  });
+  $("scan-full").addEventListener("click", function () {
+    var p = scan.pages[scan.sel]; if (!p) return;
+    p.corners = C.fullImageCorners(p.srcW, p.srcH);
+    drawEditor();
+    processScanPage(p).then(function () { renderScanPages(); updateScanResult(); });
+  });
+  function rotSel(d) {
+    var p = scan.pages[scan.sel]; if (!p) return;
+    p.turns = (p.turns + d + 4) % 4;
+    processScanPage(p).then(function () { renderScanPages(); updateScanResult(); });
+  }
+  $("scan-rot-l").addEventListener("click", function () { rotSel(-1); });
+  $("scan-rot-r").addEventListener("click", function () { rotSel(1); });
+  Array.prototype.forEach.call($("scan-filter").querySelectorAll("button"), function (b) {
+    b.addEventListener("click", function () {
+      var p = scan.pages[scan.sel]; if (!p) return;
+      p.filter = b.getAttribute("data-filter");
+      Array.prototype.forEach.call($("scan-filter").querySelectorAll("button"), function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+      setStatus("scan-status", "Applying filter.", "ok");
+      processScanPage(p).then(function () { renderScanPages(); updateScanResult(); setStatus("scan-status", "Filter applied to page " + (scan.sel + 1) + ".", "ok"); });
+    });
+  });
+  window.addEventListener("resize", function () { clearTimeout(ed.rt); ed.rt = setTimeout(function () { drawEditor(); drawPlace(); }, 120); });
+  wireFileInput("scan-file", scanAddFiles);
+  wireFileInput("scan-file-gallery", scanAddFiles);
+  wireDrop("scan-drop", scanAddFiles);
+  $("scan-quality").addEventListener("change", function () { scan.quality = parseFloat($("scan-quality").value) || 0.85; });
+
+  function readMargin(id) {
+    var v = parseFloat($(id).value), inp = $(id);
+    if (!(v >= 0 && v <= 50)) { inp.setAttribute("aria-invalid", "true"); return null; }
+    inp.removeAttribute("aria-invalid");
+    return v;
+  }
+  function fileName(id, fallback) { return C.safeFileBase($(id).value, fallback); }
+
+  $("scan-make").addEventListener("click", function () {
+    if (!scan.pages.length) return;
+    var margin = readMargin("scan-margin");
+    if (margin == null) { setStatus("scan-status", "Margin must be between 0 and 50 mm.", "bad"); return; }
+    var btn = $("scan-make"); btn.disabled = true;
+    var size = $("scan-size").value, name = fileName("scan-name", "scan") + ".pdf";
+    setStatus("scan-status", "Building the PDF.", "ok");
+    scan.queue = scan.queue.then(function () {
+      var chain = Promise.resolve();
+      scan.pages.forEach(function (p, i) {
+        if (p.quality !== scan.quality || !p.outBlob) chain = chain.then(function () { setStatus("scan-status", "Re-encoding page " + (i + 1) + ".", "ok"); return processScanPage(p); });
+      });
+      return chain;
+    }).then(function () {
+      return Promise.all([getPdfLib(), Promise.all(scan.pages.map(function (p) { return blobBytes(p.outBlob); }))]);
+    }).then(function (r) {
+      var items = scan.pages.map(function (p, i) { return { bytes: r[1][i], type: "jpg", width: p.outW, height: p.outH }; });
+      return C.imagesToPdf(r[0], items, { size: size, marginPt: C.mmToPt(margin) });
+    }).then(function (bytes) {
+      var out = $("scan-out"); clear(out); out.hidden = false;
+      out.appendChild(el("h3", { text: "Output" }));
+      var urls = scan.pages.map(function (p) { return p.outURL; });
+      out.appendChild(outputItem(bytes, name, "application/pdf", scan.pages.length + " page" + (scan.pages.length === 1 ? "" : "s"), function (box) {
+        previewPdfInto(box, bytes, 8);
+        void urls;
+      }));
+      var note = downloadNote(); if (note) out.appendChild(note);
+      setStatus("scan-status", "PDF ready: " + scan.pages.length + " page" + (scan.pages.length === 1 ? "" : "s") + ", " + C.formatBytes(bytes.length) + ".", "ok");
+    }).catch(function (e) {
+      setStatus("scan-status", e && e.code ? e.message : "The PDF could not be built because the PDF library did not load. Check the connection and reload.", "bad");
+    }).then(function () { btn.disabled = false; });
+  });
+
+  // ======================================================= PDF TOOLS
+  var pdf = { sources: [], pages: [], snapshot: null, docs: {}, stamps: 0, thumbQueue: Promise.resolve(), thumbs: {} };
+
+  function pdfAddFiles(files) {
+    var list = files.filter(function (f) { return /pdf$/i.test(f.type) || /\.pdf$/i.test(f.name); });
+    if (!list.length) { setStatus("pdf-status", "Those files are not PDFs.", "bad"); return; }
+    var chain = Promise.resolve(), msgs = [];
+    list.forEach(function (f) {
+      chain = chain.then(function () {
+        if (f.size > MAX_BYTES) { msgs.push(cleanText(f.name, 60) + " is over 50 MB and was skipped."); return; }
+        setStatus("pdf-status", "Reading " + cleanText(f.name, 60) + ".", "ok");
+        return blobBytes(f).then(function (b) { return pdfAddSource(b, f.name, false); }).catch(function (e) { msgs.push(cleanText(f.name, 60) + ": " + (e && e.code ? e.message : "could not be read as a PDF.")); });
+      });
+    });
+    chain.then(function () {
+      renderPdf();
+      setStatus("pdf-status", msgs.length ? msgs.join(" ") : pdf.pages.length + " pages from " + pdf.sources.length + " file" + (pdf.sources.length === 1 ? "" : "s") + ".", msgs.length ? "bad" : "ok");
+    });
+  }
+
+  function pdfAddSource(bytes, name, example) {
+    if (!isPdfBytes(bytes)) { var e0 = new Error("This file is not a PDF."); e0.code = "pdf"; return Promise.reject(e0); }
+    return getPdfLib().then(function (lib) { return C.loadPdf(lib, bytes); }).then(function (doc) {
+      var n = doc.getPageCount();
+      if (pdf.pages.length + n > MAX_PAGES) { var e = new Error("Adding it would make " + (pdf.pages.length + n) + " pages. The limit is 300."); e.code = "limit"; throw e; }
+      var title = "";
+      try { title = cleanText(doc.getTitle() || "", 120); } catch (er) { title = ""; }
+      var src = { id: newId(), key: pdf.sources.length ? Math.max.apply(null, pdf.sources.map(function (s) { return s.key; })) + 1 : 0, name: cleanText(name, 100), bytes: bytes, n: n, size: bytes.length, title: title, example: !!example, doc: doc, js: null };
+      pdf.sources.push(src);
+      pdf.docs[src.key] = src;
+      for (var i = 0; i < n; i++) {
+        var pg = doc.getPage(i), box = pg.getCropBox();
+        pdf.pages.push({ id: newId(), src: src.key, index: i, rotate: 0, base: C.normAngle(pg.getRotation().angle || 0), box: { x: box.x, y: box.y, width: box.width, height: box.height }, stamps: [] });
+      }
+      pdf.snapshot = null;
+    });
+  }
+
+  function renderPdfFiles() {
+    var tb = $("pdf-files").tBodies[0];
+    clear(tb);
+    if (!pdf.sources.length) { tb.appendChild(el("tr", null, [el("td", { colspan: "6", class: "help", text: "No PDFs yet. Add one above." })])); return; }
+    pdf.sources.forEach(function (s, i) {
+      var rm = el("button", { type: "button", class: "small", text: "Remove", "aria-label": "Remove file " + (i + 1) });
+      rm.addEventListener("click", function () { removeSource(s.key); });
+      var nameCell = el("td", { class: "name" }, [document.createTextNode(s.example ? "Example PDF (generated here) " : s.name)]);
+      if (s.example) nameCell.appendChild(el("span", { class: "example-tag", text: "Example data" }));
+      tb.appendChild(el("tr", null, [
+        el("td", { class: "num", text: String(i + 1) }), nameCell,
+        el("td", { class: "num", text: String(s.n) }), el("td", { class: "num", text: C.formatBytes(s.size) }),
+        el("td", { class: "name", text: s.title || "None" }), el("td", null, [rm])
+      ]));
+    });
+  }
+  function removeSource(key) {
+    var s = pdf.docs[key];
+    if (s && s.js) { try { s.js.destroy(); } catch (e) { /* ignore */ } }
+    pdf.sources = pdf.sources.filter(function (x) { return x.key !== key; });
+    delete pdf.docs[key];
+    pdf.pages = pdf.pages.filter(function (p) { return p.src !== key; });
+    pdf.snapshot = null;
+    renderPdf();
+    setStatus("pdf-status", "File removed.", "ok");
+  }
+  $("pdf-clear").addEventListener("click", function () {
+    pdf.sources.slice().forEach(function (s) { removeSource(s.key); });
+    setStatus("pdf-status", "All files removed. Add PDFs to start.", "ok");
+  });
+
+  function snapshot() { if (!pdf.snapshot) pdf.snapshot = pdf.pages.map(function (p) { return { page: p, rotate: p.rotate, stamps: p.stamps.slice() }; }); }
+  function pageLabel(p, i) { var s = pdf.docs[p.src]; return "page " + (i + 1) + " (file " + (pdf.sources.indexOf(s) + 1) + ", p. " + (p.index + 1) + ")"; }
+
+  function renderPdf() {
+    renderPdfFiles();
+    var list = $("pdf-pages");
+    clear(list);
+    pdf.pages.forEach(function (p, i) {
+      var thumb = el("button", { type: "button", class: "thumb", "aria-label": "Use " + pageLabel(p, i) + " for the signature" });
+      thumb.addEventListener("click", function () { sigPageAuto = false; $("sig-page").value = String(i + 1); $("sig-page-why").textContent = ""; drawPlace(); });
+      var ph = el("span", { class: "help", text: "Page" });
+      thumb.appendChild(ph);
+      var stamps = p.stamps.length ? el("span", { class: "chip muted", text: p.stamps.length + " stamp" + (p.stamps.length > 1 ? "s" : "") }) : null;
+      var li = el("li", { class: "card", draggable: "true" }, [
+        thumb,
+        el("div", { class: "meta", text: (i + 1) + ". file " + (pdf.sources.indexOf(pdf.docs[p.src]) + 1) + " p." + (p.index + 1) + (p.rotate ? ", +" + p.rotate + "°" : "") }),
+        stamps,
+        cardTools(i, pdf.pages.length, pageLabel(p, i), {
+          up: function () { movePdf(i, i - 1); }, down: function () { movePdf(i, i + 1); },
+          rotate: function () { snapshot(); p.rotate = (p.rotate + 90) % 360; renderPdf(); },
+          del: function () { snapshot(); pdf.pages.splice(i, 1); renderPdf(); setStatus("pdf-status", "Page deleted. Undo page edits restores it.", "ok"); }
+        })
+      ]);
+      list.appendChild(li);
+      queueThumb(p, thumb);
+    });
+    var n = pdf.pages.length;
+    $("pdf-count").textContent = n + " page" + (n === 1 ? "" : "s");
+    ["pdf-build", "pdf-extract", "pdf-split", "pdf-rot-all", "pdf-reverse", "sig-add"].forEach(function (id) { $(id).disabled = n === 0; });
+    $("pdf-reset").disabled = !pdf.snapshot;
+    $("sig-page").max = String(Math.max(1, n));
+    autoSigPage();
+    autoNames();
+    renderStampList();
+    drawPlace();
+  }
+  function movePdf(from, to) {
+    if (to < 0 || to >= pdf.pages.length) return;
+    snapshot(); moveItem(pdf.pages, from, to); renderPdf();
+    var btns = $("pdf-pages").children[to].querySelectorAll(".tools button");
+    var b = btns[to < from ? 0 : 1]; (b.disabled ? btns[2] : b).focus();
+  }
+  makeSortable($("pdf-pages"), function () { return pdf.pages; }, movePdf);
+  $("pdf-rot-all").addEventListener("click", function () { snapshot(); pdf.pages.forEach(function (p) { p.rotate = (p.rotate + 90) % 360; }); renderPdf(); });
+  $("pdf-reverse").addEventListener("click", function () { snapshot(); pdf.pages.reverse(); renderPdf(); });
+  $("pdf-reset").addEventListener("click", function () {
+    if (!pdf.snapshot) return;
+    pdf.pages = pdf.snapshot.map(function (sn) { sn.page.rotate = sn.rotate; sn.page.stamps = sn.stamps; return sn.page; });
+    pdf.snapshot = null;
+    renderPdf();
+    setStatus("pdf-status", "Page edits undone.", "ok");
+  });
+
+  // thumbnails via pdf.js, rendered one at a time
+  function sourceJs(src) {
+    if (src.js) return Promise.resolve(src.js);
+    return getPdfjs().then(function (lib) { return openPdfjs(lib, src.bytes); }).then(function (d) { src.js = d; return d; });
+  }
+  function queueThumb(p, holder) {
+    pdf.thumbQueue = pdf.thumbQueue.then(function () {
+      if (!holder.isConnected) return;
+      var src = pdf.docs[p.src]; if (!src) return;
+      return sourceJs(src).then(function (doc) { return renderPdfPage(doc, p.index + 1, 116, 128, p.rotate); }).then(function (cv) {
+        if (!holder.isConnected) return;
+        clear(holder); holder.appendChild(cv);
+      }).catch(function () {
+        $("pdf-thumb-note").textContent = "Thumbnails are off because pdf.js did not load or could not draw this file. Every PDF tool still works.";
+      });
+    });
+  }
+
+  // ----- signatures and initials
+  var sig = { mode: "draw", ink: [], drawing: false, fx: 0.55, fy: 0.78, fw: 0.28 };
+  function setSigMode(m) {
+    sig.mode = m;
+    $("sig-mode-draw").setAttribute("aria-pressed", m === "draw" ? "true" : "false");
+    $("sig-mode-type").setAttribute("aria-pressed", m === "type" ? "true" : "false");
+    $("sig-draw-box").hidden = m !== "draw"; $("sig-type-box").hidden = m !== "type";
+    drawPlace();
+  }
+  $("sig-mode-draw").addEventListener("click", function () { setSigMode("draw"); });
+  $("sig-mode-type").addEventListener("click", function () { setSigMode("type"); });
+  var pad = $("sig-pad");
+  function padPoint(e) { var r = pad.getBoundingClientRect(); return [(e.clientX - r.left) * pad.width / r.width, (e.clientY - r.top) * pad.height / r.height]; }
+  function drawPad() {
+    var ctx = pad.getContext("2d");
+    ctx.clearRect(0, 0, pad.width, pad.height);
+    ctx.strokeStyle = "#6d7278"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(20, pad.height - 34); ctx.lineTo(pad.width - 20, pad.height - 34); ctx.stroke();
+    strokeInk(ctx, sig.ink, 1, 0, 0);
+  }
+  function strokeInk(ctx, ink, k, ox, oy) {
+    ctx.save();
+    ctx.strokeStyle = "#14202b"; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.lineWidth = 3.2 * k;
+    ink.forEach(function (s) {
+      ctx.beginPath();
+      s.forEach(function (pt, i) { var x = (pt[0] - ox) * k, y = (pt[1] - oy) * k; if (i === 0) { ctx.moveTo(x, y); ctx.lineTo(x + 0.01, y); } else ctx.lineTo(x, y); });
+      ctx.stroke();
+    });
+    ctx.restore();
+  }
+  pad.addEventListener("pointerdown", function (e) { sig.drawing = true; sig.ink.push([padPoint(e)]); pad.setPointerCapture(e.pointerId); drawPad(); e.preventDefault(); });
+  pad.addEventListener("pointermove", function (e) { if (!sig.drawing) return; sig.ink[sig.ink.length - 1].push(padPoint(e)); drawPad(); });
+  function padUp() { if (sig.drawing) { sig.drawing = false; drawPlace(); } }
+  pad.addEventListener("pointerup", padUp); pad.addEventListener("pointercancel", padUp);
+  $("sig-clear").addEventListener("click", function () { sig.ink = []; drawPad(); drawPlace(); });
+  function inkBounds() {
+    var b = [Infinity, Infinity, -Infinity, -Infinity];
+    sig.ink.forEach(function (s) { s.forEach(function (p) { b[0] = Math.min(b[0], p[0]); b[1] = Math.min(b[1], p[1]); b[2] = Math.max(b[2], p[0]); b[3] = Math.max(b[3], p[1]); }); });
+    if (!isFinite(b[0])) return null;
+    var m = 6; return [b[0] - m, b[1] - m, b[2] + m, b[3] + m];
+  }
+  function sigAspect() {
+    if (sig.mode === "draw") { var b = inkBounds(); return b ? (b[2] - b[0]) / Math.max(1, b[3] - b[1]) : 3; }
+    var t = cleanText($("sig-text").value, 40) || "A";
+    var ctx = document.createElement("canvas").getContext("2d");
+    ctx.font = "100px Helvetica, Arial, sans-serif";
+    return ctx.measureText(t).width / 94;
+  }
+  function sigPng() {
+    var b = inkBounds(); if (!b) return Promise.resolve(null);
+    var k = 3, cv = document.createElement("canvas");
+    cv.width = Math.ceil((b[2] - b[0]) * k); cv.height = Math.ceil((b[3] - b[1]) * k);
+    strokeInk(cv.getContext("2d"), sig.ink, k, b[0], b[1]);
+    return canvasToBlob(cv, "image/png").then(blobBytes);
+  }
+  $("sig-text").addEventListener("input", drawPlace);
+  $("sig-size").addEventListener("input", function () { sig.fw = (+$("sig-size").value) / 100; drawPlace(); });
+  $("sig-page").addEventListener("input", drawPlace);
+
+  function sigPageIndex() {
+    var v = parseInt($("sig-page").value, 10);
+    if (!(v >= 1 && v <= pdf.pages.length)) return -1;
+    return v - 1;
+  }
+  var place = { cache: null, drag: null, layout: null };
+  function drawPlace() {
+    var cv = $("place-canvas"); if (!cv || $("panel-pdf").hidden) return;
+    var ctx = cv.getContext("2d"), i = sigPageIndex(), p = pdf.pages[i];
+    var maxW = Math.min(300, (cv.parentNode.getBoundingClientRect().width || 300) - 16);
+    var styles = getComputedStyle(document.documentElement);
+    var line = styles.getPropertyValue("--line").trim(), mark = styles.getPropertyValue("--reg").trim() || "#d6157f";
+    if (!p) { cv.width = Math.max(120, maxW); cv.height = 160; ctx.clearRect(0, 0, cv.width, cv.height); ctx.fillStyle = styles.getPropertyValue("--muted").trim(); ctx.font = "14px sans-serif"; ctx.fillText(pdf.pages.length ? "Enter a page number from 1 to " + pdf.pages.length : "Add a PDF first", 10, 30); return; }
+    var ds = C.displaySize(p.box, p.base + p.rotate), k = Math.min(maxW / ds[0], 420 / ds[1]);
+    var W = Math.round(ds[0] * k), H = Math.round(ds[1] * k);
+    if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+    place.layout = { W: W, H: H };
+    var key = p.id + ":" + p.rotate + ":" + W;
+    function paint(bg) {
+      ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, W, H);
+      if (bg) ctx.drawImage(bg, 0, 0, W, H);
+      ctx.strokeStyle = line; ctx.lineWidth = 1; ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
+      p.stamps.forEach(function (s) { ctx.fillStyle = "rgba(214,21,127,0.16)"; ctx.fillRect(s.fx * W, s.fy * H, s.fw * W, s.fw * W / s.aspect); });
+      var a = sigAspect(), bw = sig.fw * W, bh = bw / a;
+      var bx = Math.max(0, Math.min(W - bw, sig.fx * W)), by = Math.max(0, Math.min(H - bh, sig.fy * H));
+      sig.fx = bx / W; sig.fy = by / H;
+      ctx.save();
+      if (sig.mode === "draw") {
+        var b = inkBounds();
+        if (b) strokeInk(ctx, sig.ink, bw / (b[2] - b[0]), b[0] - bx / (bw / (b[2] - b[0])), b[1] - by / (bw / (b[2] - b[0])));
+      } else {
+        var t = cleanText($("sig-text").value, 40);
+        ctx.fillStyle = "#14202b"; ctx.font = Math.max(4, bh / 0.94) + "px Helvetica, Arial, sans-serif"; ctx.textBaseline = "alphabetic";
+        ctx.fillText(t, bx, by + bh * 0.72 / 0.94);
+      }
+      ctx.setLineDash([5, 4]); ctx.strokeStyle = mark; ctx.lineWidth = 2; ctx.strokeRect(bx, by, bw, bh);
+      ctx.restore();
+    }
+    if (place.cache && place.cache.key === key) { paint(place.cache.cv); return; }
+    paint(null);
+    var src = pdf.docs[p.src];
+    sourceJs(src).then(function (doc) { return renderPdfPage(doc, p.index + 1, W, H, p.rotate); }).then(function (bg) {
+      place.cache = { key: key, cv: bg };
+      if (sigPageIndex() === i) paint(bg);
+    }).catch(function () { /* no thumbnails: keep the blank page */ });
+  }
+  var pc = $("place-canvas");
+  pc.addEventListener("pointerdown", function (e) {
+    if (!place.layout) return;
+    var r = pc.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+    place.drag = { dx: x - sig.fx, dy: y - sig.fy };
+    var bw = sig.fw, bh = sig.fw * place.layout.W / sigAspect() / place.layout.H;
+    if (!(x >= sig.fx && x <= sig.fx + bw && y >= sig.fy && y <= sig.fy + bh)) place.drag = { dx: bw / 2, dy: bh / 2 };
+    sig.fx = x - place.drag.dx; sig.fy = y - place.drag.dy;
+    pc.setPointerCapture(e.pointerId); e.preventDefault(); drawPlace();
+  });
+  pc.addEventListener("pointermove", function (e) {
+    if (!place.drag) return;
+    var r = pc.getBoundingClientRect();
+    sig.fx = (e.clientX - r.left) / r.width - place.drag.dx; sig.fy = (e.clientY - r.top) / r.height - place.drag.dy;
+    drawPlace();
+  });
+  pc.addEventListener("pointerup", function () { place.drag = null; });
+  pc.addEventListener("pointercancel", function () { place.drag = null; });
+  pc.addEventListener("keydown", function (e) {
+    var s = e.shiftKey ? 0.05 : 0.01, m = { ArrowLeft: [-s, 0], ArrowRight: [s, 0], ArrowUp: [0, -s], ArrowDown: [0, s] }[e.key];
+    if (!m) return;
+    e.preventDefault(); sig.fx += m[0]; sig.fy += m[1]; drawPlace();
+  });
+
+  $("sig-add").addEventListener("click", function () {
+    var i = sigPageIndex();
+    if (i < 0) { setStatus("pdf-status", "Choose a page number from 1 to " + pdf.pages.length + ".", "bad"); return; }
+    var p = pdf.pages[i], aspect = sigAspect();
+    var done = function (stamp) {
+      snapshot();
+      p.stamps.push(stamp);
+      renderPdf();
+      setStatus("pdf-status", (stamp.kind === "image" ? "Signature" : "Initials") + " placed on page " + (i + 1) + ". It is added when you build or extract.", "ok");
+    };
+    if (sig.mode === "draw") {
+      sigPng().then(function (png) {
+        if (!png) { setStatus("pdf-status", "Draw a signature in the box first.", "bad"); return; }
+        done({ kind: "image", png: png, aspect: aspect, fx: sig.fx, fy: sig.fy, fw: sig.fw });
+      });
+    } else {
+      var t = cleanText($("sig-text").value, 40);
+      if (!t) { setStatus("pdf-status", "Type the initials first.", "bad"); return; }
+      if (/[^ -~ -ÿ]/.test(t)) { setStatus("pdf-status", "Initials can use basic Latin letters, digits and punctuation only. Draw them instead for other scripts.", "bad"); return; }
+      done({ kind: "text", text: t, aspect: aspect, fx: sig.fx, fy: sig.fy, fw: sig.fw });
+    }
+  });
+  function renderStampList() {
+    var ul = $("sig-list"); clear(ul);
+    pdf.pages.forEach(function (p, i) {
+      p.stamps.forEach(function (s, j) {
+        var rm = el("button", { type: "button", class: "small", text: "Remove", "aria-label": "Remove stamp " + (j + 1) + " from page " + (i + 1) });
+        rm.addEventListener("click", function () { snapshot(); p.stamps.splice(j, 1); renderPdf(); });
+        ul.appendChild(el("li", null, [el("span", { text: (s.kind === "image" ? "Drawn signature" : "Typed text “" + s.text + "”") + " on page " + (i + 1) }), rm]));
+      });
+    });
+  }
+
+  // ----- builds
+  function numbersOpt() {
+    if (!$("num-on").checked) return null;
+    var sz = parseFloat($("num-sizept").value);
+    if (!(sz >= 6 && sz <= 24)) sz = 10;
+    return { format: $("num-format").value, position: $("num-pos").value, size: sz, start: 1 };
+  }
+  function buildItems(indices) {
+    return indices.map(function (k) { var p = pdf.pages[k]; return { src: p.src, index: p.index, rotate: p.rotate, stamps: p.stamps }; });
+  }
+  function runPdfBuild(groups, labelFn) {
+    var out = $("pdf-out");
+    var btns = ["pdf-build", "pdf-extract", "pdf-split"];
+    btns.forEach(function (id) { $(id).disabled = true; });
+    setStatus("pdf-status", "Building.", "ok");
+    var sources = {};
+    pdf.sources.forEach(function (s) { sources[s.key] = s.bytes; });
+    var results = [];
+    return getPdfLib().then(function (lib) {
+      return groups.reduce(function (chain, g, gi) {
+        return chain.then(function () {
+          setStatus("pdf-status", "Building file " + (gi + 1) + " of " + groups.length + ".", "ok");
+          return C.assemblePdf(lib, sources, buildItems(g), { numbers: numbersOpt() }).then(function (b) { results.push({ bytes: b, n: g.length, name: labelFn(gi, g) }); });
+        });
+      }, Promise.resolve());
+    }).then(function () {
+      clear(out); out.hidden = false;
+      out.appendChild(el("h3", { text: results.length === 1 ? "Output" : "Outputs (" + results.length + " files)" }));
+      results.forEach(function (r, i) {
+        out.appendChild(outputItem(r.bytes, r.name, "application/pdf", r.n + " page" + (r.n === 1 ? "" : "s"), function (box) {
+          if (i < 6) previewPdfInto(box, r.bytes, 6); else box.appendChild(el("span", { class: "help", text: "Preview shown for the first 6 files only." }));
+        }));
+      });
+      var note = downloadNote(); if (note) out.appendChild(note);
+      setStatus("pdf-status", results.length === 1 ? "PDF ready." : results.length + " PDFs ready.", "ok");
+    }).catch(function (e) {
+      setStatus("pdf-status", e && e.code ? e.message : "The PDF could not be built. " + (window.PDFLib ? "One of the files may be damaged." : "The PDF library did not load; check the connection and reload."), "bad");
+    }).then(function () { btns.forEach(function (id) { $(id).disabled = pdf.pages.length === 0; }); });
+  }
+  $("pdf-build").addEventListener("click", function () {
+    var all = pdf.pages.map(function (_, i) { return i; });
+    var base = fileName("pdf-name", "document");
+    runPdfBuild([all], function () { return base + ".pdf"; });
+  });
+  $("pdf-extract").addEventListener("click", function () {
+    var idx;
+    try { idx = C.parseRange($("pdf-range").value, pdf.pages.length); $("pdf-range").removeAttribute("aria-invalid"); }
+    catch (e) { $("pdf-range").setAttribute("aria-invalid", "true"); setStatus("pdf-status", e.message, "bad"); return; }
+    var base = fileName("pdf-name", "document");
+    runPdfBuild([idx], function () { return base + "-pages.pdf"; });
+  });
+  $("pdf-split").addEventListener("click", function () {
+    var every = parseInt($("pdf-every").value, 10), groups;
+    try { groups = C.chunkIndices(pdf.pages.length, every); $("pdf-every").removeAttribute("aria-invalid"); }
+    catch (e) { $("pdf-every").setAttribute("aria-invalid", "true"); setStatus("pdf-status", e.message, "bad"); return; }
+    var base = fileName("pdf-name", "document");
+    runPdfBuild(groups, function (gi, g) { return base + "-" + (g.length === 1 ? "p" + (g[0] + 1) : "p" + (g[0] + 1) + "-" + (g[g.length - 1] + 1)) + ".pdf"; });
+  });
+  wireFileInput("pdf-file", pdfAddFiles);
+  wireDrop("pdf-drop", pdfAddFiles);
+
+  // ======================================================= IMAGE TOOLS
+  var imgs = { list: [], sel: 0 };
+  function imgAddFiles(files) {
+    var list = files.filter(function (f) { return /^image\//.test(f.type) || /\.(jpe?g|png|webp|gif|bmp|avif|heic|heif)$/i.test(f.name); });
+    if (!list.length) { setStatus("img-status", "Those files are not images.", "bad"); return; }
+    var msgs = [];
+    var chain = Promise.resolve();
+    list.forEach(function (f) {
+      chain = chain.then(function () {
+        if (f.size > MAX_BYTES) { msgs.push(cleanText(f.name, 60) + " is over 50 MB and was skipped."); return; }
+        if (imgs.list.length >= MAX_PAGES) { msgs.push("The 300-image limit was reached; the rest were skipped."); return; }
+        return imgAdd(f, f.name, false).catch(function () { msgs.push(cleanText(f.name, 60) + " could not be decoded by this browser."); });
+      });
+    });
+    chain.then(function () {
+      renderImgs();
+      setStatus("img-status", msgs.length ? msgs.join(" ") : imgs.list.length + " image" + (imgs.list.length === 1 ? "" : "s") + " loaded.", msgs.length ? "bad" : "ok");
+    });
+  }
+  function imgAdd(blob, name, example) {
+    return decodeImage(blob).then(function (bmp) {
+      var s = srcSize(bmp);
+      imgs.list.push({ id: newId(), name: cleanText(name, 100), blob: blob, type: blob.type, size: blob.size, w: s.w, h: s.h, out: null, example: !!example, url: URL.createObjectURL(blob) });
+      if (bmp.close) bmp.close();
+    });
+  }
+  function compressOne(it, q, maxEdge) {
+    return decodeImage(it.blob).then(function (bmp) {
+      var cv = drawScaled(bmp, maxEdge > 0 ? maxEdge : 1e9, true);
+      if (bmp.close) bmp.close();
+      return canvasToBlob(cv, "image/jpeg", q).then(function (b) {
+        if (it.out && it.out.url) URL.revokeObjectURL(it.out.url);
+        it.out = { blob: b, w: cv.width, h: cv.height, q: q, edge: maxEdge, url: URL.createObjectURL(b) };
+      });
+    });
+  }
+  function compressSettings() { return { q: parseFloat($("img-quality").value) || 0.75, edge: parseInt($("img-maxedge").value, 10) || 0 }; }
+  $("img-quality").addEventListener("input", function () { $("img-quality-val").textContent = (+$("img-quality").value).toFixed(2); });
+  function compressAll() {
+    var s = compressSettings(), chain = Promise.resolve();
+    imgs.list.forEach(function (it, i) {
+      chain = chain.then(function () {
+        if (it.out && it.out.q === s.q && it.out.edge === s.edge) return;
+        setStatus("img-status", "Compressing image " + (i + 1) + " of " + imgs.list.length + ".", "ok");
+        return compressOne(it, s.q, s.edge);
+      });
+    });
+    return chain;
+  }
+  $("img-compress").addEventListener("click", function () {
+    if (!imgs.list.length) { setStatus("img-status", "Add images first.", "bad"); return; }
+    var b = $("img-compress"); b.disabled = true;
+    compressAll().then(function () { renderImgs(); setStatus("img-status", "Compressed " + imgs.list.length + " image" + (imgs.list.length === 1 ? "" : "s") + ".", "ok"); })
+      .catch(function () { setStatus("img-status", "An image could not be compressed. It may be too large for this browser's canvas.", "bad"); })
+      .then(function () { b.disabled = false; });
+  });
+  $("img-clear").addEventListener("click", function () {
+    imgs.list.forEach(function (it) { URL.revokeObjectURL(it.url); if (it.out) URL.revokeObjectURL(it.out.url); });
+    imgs.list = []; imgs.sel = 0; renderImgs(); setStatus("img-status", "All images removed.", "ok");
+  });
+  function renderImgs() {
+    var tb = $("img-table").tBodies[0]; clear(tb);
+    var tb0 = 0, ta = 0, anyOut = false, bigger = 0;
+    if (!imgs.list.length) tb.appendChild(el("tr", null, [el("td", { colspan: "7", class: "help", text: "No images yet." })]));
+    imgs.list.forEach(function (it, i) {
+      tb0 += it.size;
+      var o = it.out;
+      if (o) { ta += o.blob.size; anyOut = true; if (o.blob.size > it.size) bigger++; }
+      var change = o ? ((o.blob.size / it.size - 1) * 100) : null;
+      var actions = el("td");
+      var view = el("button", { type: "button", class: "small", text: "Compare", "aria-label": "Compare image " + (i + 1) });
+      view.addEventListener("click", function () { imgs.sel = i; renderCompare(); });
+      actions.appendChild(view);
+      if (o) {
+        var st = el("span", { class: "help" });
+        var dl = downloadButton(function () { return o.blob; }, C.safeFileBase(it.example ? "example" : it.name, "image") + "-small.jpg", st);
+        dl.className = "small"; dl.setAttribute("aria-label", "Download compressed image " + (i + 1));
+        actions.appendChild(document.createTextNode(" ")); actions.appendChild(dl); actions.appendChild(st);
+      }
+      var rm = el("button", { type: "button", class: "small", text: "Remove", "aria-label": "Remove image " + (i + 1) });
+      rm.addEventListener("click", function () { URL.revokeObjectURL(it.url); if (it.out) URL.revokeObjectURL(it.out.url); imgs.list.splice(i, 1); imgs.sel = 0; renderImgs(); });
+      actions.appendChild(document.createTextNode(" ")); actions.appendChild(rm);
+      var nameCell = el("td", { class: "name" }, [document.createTextNode(it.example ? "Example image " : it.name)]);
+      if (it.example) nameCell.appendChild(el("span", { class: "example-tag", text: "Example data" }));
+      tb.appendChild(el("tr", null, [
+        nameCell,
+        el("td", { class: "num", text: it.w + " x " + it.h }),
+        el("td", { class: "num", text: o ? o.w + " x " + o.h : "" }),
+        el("td", { class: "num", text: C.formatBytes(it.size) }),
+        el("td", { class: "num", text: o ? C.formatBytes(o.blob.size) : "" }),
+        el("td", { class: "num", text: change == null ? "" : (change > 0 ? "+" : "") + change.toFixed(0) + "%" }),
+        actions
+      ]));
+    });
+    $("img-tot-before").textContent = C.formatBytes(tb0);
+    $("img-tot-after").textContent = anyOut ? C.formatBytes(ta) : "";
+    $("img-tot-change").textContent = anyOut && tb0 ? ((ta / tb0 - 1) * 100 > 0 ? "+" : "") + ((ta / tb0 - 1) * 100).toFixed(0) + "%" : "";
+    var note = $("img-note");
+    var notes = [];
+    if (bigger) notes.push(bigger + " result" + (bigger > 1 ? "s are" : " is") + " larger than the original. Lower the quality or the longest side, or keep the original.");
+    if (anyOut && EMBEDDED) notes.push("This viewer may block downloads. They work on the GitHub Pages version of Doc Kit.");
+    note.textContent = notes.join(" "); note.hidden = !notes.length;
+    $("img-make").disabled = !imgs.list.length; $("img-compress").disabled = !imgs.list.length;
+    if (typeof autoNames === "function") autoNames();
+    renderCompare();
+  }
+  function renderCompare() {
+    var it = imgs.list[imgs.sel], box = $("img-compare");
+    if (!it) { box.hidden = true; return; }
+    box.hidden = false;
+    $("img-before").src = it.url;
+    $("img-before-cap").textContent = "Before: " + it.w + " x " + it.h + ", " + C.formatBytes(it.size);
+    $("img-after").hidden = !it.out;
+    if (it.out) { $("img-after").src = it.out.url; $("img-after-cap").textContent = "After: " + it.out.w + " x " + it.out.h + ", " + C.formatBytes(it.out.blob.size); }
+    else { $("img-after").removeAttribute("src"); $("img-after-cap").textContent = "After: press Compress"; }
+  }
+  $("img-make").addEventListener("click", function () {
+    if (!imgs.list.length) return;
+    var margin = readMargin("img-margin");
+    if (margin == null) { setStatus("img-status", "Margin must be between 0 and 50 mm.", "bad"); return; }
+    var useComp = $("img-use-comp").checked, b = $("img-make"); b.disabled = true;
+    var name = fileName("img-name", "images") + ".pdf";
+    (useComp ? compressAll() : Promise.resolve()).then(function () {
+      var chain = Promise.resolve(), items = [];
+      imgs.list.forEach(function (it) {
+        chain = chain.then(function () {
+          if (useComp) return blobBytes(it.out.blob).then(function (by) { items.push({ bytes: by, type: "jpg", width: it.out.w, height: it.out.h }); });
+          return blobBytes(it.blob).then(function (by) {
+            var t = sniffImageType(by);
+            if (t === "png") { items.push({ bytes: by, type: "png", width: it.w, height: it.h }); return; }
+            // JPEG orientation tags and other formats: re-encode at high quality through a canvas.
+            return decodeImage(it.blob).then(function (bmp) {
+              var cv = drawScaled(bmp, 1e9, true); if (bmp.close) bmp.close();
+              return canvasToBlob(cv, "image/jpeg", 0.92).then(blobBytes).then(function (j) { items.push({ bytes: j, type: "jpg", width: cv.width, height: cv.height }); });
+            });
+          });
+        });
+      });
+      return chain.then(function () { return getPdfLib(); }).then(function (lib) { return C.imagesToPdf(lib, items, { size: $("img-size").value, marginPt: C.mmToPt(margin) }); });
+    }).then(function (bytes) {
+      var out = $("img-out"); clear(out); out.hidden = false;
+      out.appendChild(el("h3", { text: "Output" }));
+      out.appendChild(outputItem(bytes, name, "application/pdf", imgs.list.length + " page" + (imgs.list.length === 1 ? "" : "s"), function (box) { previewPdfInto(box, bytes, 8); }));
+      var note = downloadNote(); if (note) out.appendChild(note);
+      renderImgs();
+      setStatus("img-status", "PDF ready: " + C.formatBytes(bytes.length) + ".", "ok");
+    }).catch(function (e) {
+      setStatus("img-status", e && e.code ? e.message : "The PDF could not be built. " + (window.PDFLib ? "An image may be too large for this browser." : "The PDF library did not load; check the connection and reload."), "bad");
+    }).then(function () { b.disabled = false; });
+  });
+  wireFileInput("img-file", imgAddFiles);
+  wireDrop("img-drop", imgAddFiles);
+
+  // ======================================================= EXAMPLES
+  function exampleSceneCanvas() {
+    // Receipt texture with real printed text, then warped onto a table.
+    var tw = 480, th = 760, cv = document.createElement("canvas");
+    cv.width = tw; cv.height = th;
+    var ctx = cv.getContext("2d");
+    ctx.fillStyle = "#f6f3ea"; ctx.fillRect(0, 0, tw, th);
+    ctx.fillStyle = "#26282b"; ctx.textBaseline = "alphabetic";
+    var mono = "\"Martian Mono\", ui-monospace, Menlo, monospace";
+    ctx.textAlign = "center";
+    ctx.font = "700 30px " + mono; ctx.fillText("NORTHSIDE SUPPLY", tw / 2, 70);
+    ctx.font = "16px " + mono; ctx.fillText("Yard 4, Field Road", tw / 2, 98); ctx.fillText("Receipt 004817", tw / 2, 122);
+    ctx.textAlign = "left";
+    var rows = [["Work gloves x2", "18.40"], ["Safety glasses", "9.95"], ["Pipe dope 1 qt", "14.75"], ["Zip ties (100)", "6.20"], ["Thread tape x3", "5.85"], ["Marking paint", "8.99"], ["Shop rags 10 lb", "21.00"], ["Coffee, large", "3.25"]];
+    var y = 175;
+    ctx.font = "18px " + mono;
+    ctx.fillText("-".repeat(34), 34, y - 22);
+    rows.forEach(function (r) { ctx.textAlign = "left"; ctx.fillText(r[0], 34, y); ctx.textAlign = "right"; ctx.fillText(r[1], tw - 34, y); y += 34; });
+    ctx.textAlign = "left"; ctx.fillText("-".repeat(34), 34, y); y += 36;
+    [["Subtotal", "88.39"], ["Tax 8.25%", "7.29"]].forEach(function (r) { ctx.textAlign = "left"; ctx.fillText(r[0], 34, y); ctx.textAlign = "right"; ctx.fillText(r[1], tw - 34, y); y += 32; });
+    ctx.font = "700 24px " + mono; ctx.textAlign = "left"; ctx.fillText("TOTAL", 34, y + 10); ctx.textAlign = "right"; ctx.fillText("95.68", tw - 34, y + 10);
+    ctx.font = "16px " + mono; ctx.textAlign = "center";
+    ctx.fillText("PAID  CARD ****", tw / 2, y + 70); ctx.fillText("Thank you", tw / 2, y + 100);
+    for (var b = 0; b < 46; b++) { var bw = (b * 7) % 3 + 1; ctx.fillRect(70 + b * 7.3, th - 92, bw, 46); }
+    var tex = canvasImage(cv);
+    var scene = C.makeExampleScene(tex, {});
+    return imageDataToCanvas(scene.image);
+  }
+
+  function loadExamples() {
+    setStatus("scan-status", "Building the example image.", "ok");
+    return nextFrame().then(function () {
+      var cv = exampleSceneCanvas();
+      return canvasToBlob(cv, "image/jpeg", 0.9);
+    }).then(function (blob) {
+      return scanAddImage(blob, "Example image", true).then(function () {
+        setStatus("scan-status", "Example image loaded: a photo of a receipt on a table. The outline was found automatically. Add your own photos to replace it.", "ok");
+        return imgAdd(blob, "Example image", true).then(renderImgs).then(function () { setStatus("img-status", "Example image loaded. Press Compress to see the size change.", "ok"); });
+      });
+    }).catch(function () {
+      setStatus("scan-status", "The example image could not be built in this browser. Add your own photos.", "warn");
+    });
+  }
+  function loadExamplePdf() {
+    setStatus("pdf-status", "Loading the PDF library.", "ok");
+    getPdfLib().then(function (lib) {
+      $("pdf-lib-state").textContent = "pdf-lib 1.17.1 ready";
+      return C.makeExamplePdf(lib);
+    }).then(function (bytes) {
+      return pdfAddSource(bytes, "Example PDF", true);
+    }).then(function () {
+      renderPdf();
+      setStatus("pdf-status", "Example PDF loaded (3 pages, generated in this tab). Add your own PDFs to merge them.", "ok");
+      getPdfjs().then(function () { $("pdf-lib-state").textContent = "pdf-lib 1.17.1, pdf.js 3.11.174 (" + pdfjsMode + ")"; }).catch(function () {});
+    }).catch(function () {
+      $("pdf-lib-state").textContent = "PDF library unavailable";
+      setStatus("pdf-status", "The PDF library could not be loaded from the CDN, so PDF tools and Make PDF are unavailable. Scanning and image compression still work.", "bad");
+      renderPdf();
+    });
+  }
+
+  // ------------------------------------------------- automatic choices
+  // Paper size: picked from the browser language until the user changes it.
+  (function autoPaper() {
+    var lang = (navigator.languages && navigator.languages[0]) || navigator.language || "";
+    var paper = C.paperForLocale(lang);
+    var why = (paper === "a4" ? "A4" : "Letter") + " picked because this browser's language is " + (cleanText(lang, 20) || "not set") + ". Change it above if you need the other size.";
+    [["scan-size", "scan-size-why"], ["img-size", "img-size-why"]].forEach(function (ids) {
+      var sel = $(ids[0]);
+      sel.value = paper; $(ids[1]).textContent = why;
+      sel.addEventListener("change", function () { $(ids[1]).textContent = ""; });
+    });
+  })();
+  // Output names follow the files added, until the user types a name.
+  var nameAuto = { "pdf-name": true, "img-name": true };
+  Object.keys(nameAuto).forEach(function (id) { $(id).addEventListener("input", function () { nameAuto[id] = false; if (id === "pdf-name") $("pdf-name-why").textContent = ""; }); });
+  function autoNames() {
+    if (nameAuto["pdf-name"]) {
+      var names = pdf.sources.filter(function (s) { return !s.example; }).map(function (s) { return s.name; });
+      var v = C.outputBaseName(names, "document");
+      $("pdf-name").value = v;
+      $("pdf-name-why").textContent = names.length ? "File name taken from " + (names.length > 1 ? "the first of " + names.length + " files" : "the file you added") + ". Type to change it." : "";
+    }
+    if (nameAuto["img-name"]) {
+      var inames = imgs.list.filter(function (it) { return !it.example; }).map(function (it) { return it.name; });
+      $("img-name").value = inames.length === 1 ? C.safeFileBase(inames[0], "images") : "images";
+    }
+  }
+  // Signature page: the last page, where signatures usually go, until the user picks one.
+  var sigPageAuto = true;
+  $("sig-page").addEventListener("input", function () { sigPageAuto = false; $("sig-page-why").textContent = ""; });
+  function autoSigPage() {
+    if (!sigPageAuto || !pdf.pages.length) { if (!pdf.pages.length) $("sig-page-why").textContent = ""; return; }
+    $("sig-page").value = String(pdf.pages.length);
+    $("sig-page-why").textContent = "Page " + pdf.pages.length + " is the last page, where signatures usually go. Tap a page thumbnail or type a number to use another.";
+  }
+
+  // ------------------------------------------------------------ start
+  sig.fw = (+$("sig-size").value) / 100;
+  drawPad();
+  renderScanPages();
+  selectScanPage(-1);
+  renderPdf();
+  renderImgs();
+  var last = store("tab");
+  selectTab(TABS.indexOf(last) >= 0 ? last : "scan");
+  if (document.fonts && document.fonts.load) {
+    Promise.race([document.fonts.load("18px \"Martian Mono\""), new Promise(function (r) { setTimeout(r, 1500); })]).catch(function () {}).then(loadExamples);
+  } else loadExamples();
+  loadExamplePdf();
+})();
+</script>

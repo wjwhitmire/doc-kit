@@ -1,0 +1,65 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ["20", "22"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm ci
+      - run: npm test
+
+  pages-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python web/build_pages.py
+      - run: git diff --exit-code docs/index.html
+      - name: No em dashes
+        run: |
+          python - <<'PY'
+          import pathlib, sys
+          bad = [str(p) for p in pathlib.Path(".").rglob("*")
+                 if p.is_file() and ".git" not in p.parts and "node_modules" not in p.parts
+                 and chr(0x2014) in p.read_text(encoding="utf-8", errors="ignore")]
+          print("\n".join(bad))
+          sys.exit(1 if bad else 0)
+          PY
+
+  published-site:
+    # Builds the site the way the release does (placeholders filled, served
+    # under /doc-kit/) and runs the scan, PDF and image workflows in Chromium.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pytest playwright pypdf
+      - run: python -m playwright install --with-deps chromium
+      - run: pytest -q tests/test_published_site.py
+
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,19 @@
+{
+  "name": "doc-kit",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Scan to PDF, PDF tools and image compression that run entirely in the browser.",
+  "license": "MIT",
+  "author": "Will Whitmire",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/geometry.test.mjs tests/image.test.mjs tests/page.test.mjs tests/pdf.test.mjs tests/page_contract.test.mjs",
+    "build": "python3 web/build_pages.py"
+  },
+  "devDependencies": {
+    "pdf-lib": "1.17.1"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
